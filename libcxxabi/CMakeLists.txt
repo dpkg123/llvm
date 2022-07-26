@@ -88,6 +88,7 @@ option(LIBCXXABI_INSTALL_LIBRARY "Install the libc++abi library." ON)
 
 set(LIBCXXABI_SHARED_OUTPUT_NAME "c++abi" CACHE STRING "Output name for the shared libc++abi runtime library.")
 set(LIBCXXABI_STATIC_OUTPUT_NAME "c++abi" CACHE STRING "Output name for the static libc++abi runtime library.")
+set(LIBCXXABI_DEMANGLE_STATIC_OUTPUT_NAME "c++demangle" CACHE STRING "Output name for the optional libc++demangle runtime library.")
 
 set(LIBCXXABI_INSTALL_INCLUDE_DIR "${CMAKE_INSTALL_INCLUDEDIR}/c++/v1" CACHE STRING "Path to install the libc++abi headers at.")
 
@@ -131,6 +132,14 @@ option(LIBCXXABI_BAREMETAL "Build libc++abi for baremetal targets." OFF)
 option(LIBCXXABI_SILENT_TERMINATE "Set this to make the terminate handler default to a silent alternative" OFF)
 option(LIBCXXABI_NON_DEMANGLING_TERMINATE "Set this to make the terminate handler
 avoid demangling" OFF)
+
+# Omit __cxa_demangle to reduce the size of libc++[abi].so. Package it into a
+# separate static library for when it is actually needed.
+option(LIBCXXABI_STATIC_DEMANGLE_LIBRARY "Put __cxa_demangle into a separate static library" OFF)
+
+if (LIBCXXABI_STATIC_DEMANGLE_LIBRARY AND NOT LIBCXXABI_NON_DEMANGLING_TERMINATE)
+  message(FATAL_ERROR "libc++demangle is only supported when libc++abi doesn't use demangling")
+endif()
 
 if (NOT LIBCXXABI_ENABLE_SHARED AND NOT LIBCXXABI_ENABLE_STATIC)
   message(FATAL_ERROR "libc++abi must be built as either a shared or static library.")
