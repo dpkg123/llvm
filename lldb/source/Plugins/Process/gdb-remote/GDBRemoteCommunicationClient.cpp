@@ -356,8 +356,6 @@ void GDBRemoteCommunicationClient::GetRemoteQSupported() {
   // build the qSupported packet
   std::vector<std::string> features = {"xmlRegisters=i386,arm,mips,arc",
                                        "multiprocess+",
-                                       "fork-events+",
-                                       "vfork-events+",
                                        "swbreak+",
                                        "hwbreak+"};
   StreamString packet;
