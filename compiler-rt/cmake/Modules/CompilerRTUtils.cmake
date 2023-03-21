@@ -309,7 +309,7 @@ macro(load_llvm_config)
       "You are not using the monorepo layout. This configuration is DEPRECATED.")
   endif()
 
-  find_package(LLVM HINTS "${LLVM_CMAKE_DIR}")
+  find_package(LLVM HINTS "${LLVM_CMAKE_DIR}" CMAKE_FIND_ROOT_PATH_BOTH)
   if (NOT LLVM_FOUND)
      message(WARNING "UNSUPPORTED COMPILER-RT CONFIGURATION DETECTED: "
                      "LLVM cmake package not found.\n"
