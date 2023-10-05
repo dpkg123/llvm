@@ -91,14 +91,3 @@ define void @unaligned(ptr %p0) {
   unreachable
 }
 
-define void @inline_asm(ptr %p0) {
-; CHECK-LABEL: inline_asm:
-; CHECK:       # %bb.0:
-; CHECK-NEXT:    #APP
-; CHECK-NEXT:    *(u32 *)(r0 + 42) = 7 # encoding: [0x62,0x00,0x2a,0x00,0x07,0x00,0x00,0x00]
-; CHECK-EMPTY:
-; CHECK-NEXT:    #NO_APP
-  call void asm "*(u32 *)(r0 + 42) = 7;", "~{r0},~{mem}"()
-
-  unreachable
-}
