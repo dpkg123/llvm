@@ -12959,6 +12959,9 @@ SDValue DAGCombiner::visitSETCC(SDNode *N) {
     return Combined;
   }
 
+  // FIXME: Local workaround to turn off this optimization
+  return SDValue();
+
   // Optimize
   //    1) (icmp eq/ne (and X, C0), (shift X, C1))
   // or
