@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5cc0b69e_bea1594e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1120458
+      },
+      "writtenOn": "2024-07-16T23:08:03Z",
+      "side": 1,
+      "message": "(note- this is a version of http://r.android.com/3169576 that is compatible with the ndk 23 release. This change needs to be +2\u0027d to cherry-pick it and use it in coastgaurd)",
+      "revId": "000f8d12aed11fc877926ebec7bf665566699221",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    }
+  ]
+}
