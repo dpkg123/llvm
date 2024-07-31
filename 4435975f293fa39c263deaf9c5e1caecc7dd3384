@@ -34,6 +34,24 @@
       "parentUuid": "aa395f3c_5c5aa906",
       "revId": "4435975f293fa39c263deaf9c5e1caecc7dd3384",
       "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6087ee12_aa50ab21",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1058860
+      },
+      "writtenOn": "2024-07-31T22:37:20Z",
+      "side": 1,
+      "message": "Yes, it is a copy of https://github.com/llvm/llvm-project/.",
+      "parentUuid": "4fcfc400_1708fa49",
+      "revId": "4435975f293fa39c263deaf9c5e1caecc7dd3384",
+      "serverId": "85c56323-6fa9-3386-8a01-6480fb634889"
     }
   ]
 }
