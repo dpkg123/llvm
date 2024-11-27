@@ -10,7 +10,7 @@
 #
 ##===----------------------------------------------------------------------===##
 
-set(LIBOMPTARGET_BUILD_DEVICERTL_BCLIB TRUE CACHE BOOL
+set(LIBOMPTARGET_BUILD_DEVICERTL_BCLIB false CACHE BOOL
   "Can be set to false to disable building this library.")
 
 if (NOT LIBOMPTARGET_BUILD_DEVICERTL_BCLIB)
@@ -259,7 +259,7 @@ function(compileDeviceRTLLibrary target_cpu target_name target_triple)
             -Xclang -fembed-offload-object=${CMAKE_CURRENT_BINARY_DIR}/packaged_${bclib_name}
             -o ${output_name}
             ${source_directory}/Stub.cpp
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/packaged_${bclib_name} ${source_directory}/Stub.cpp
+    DEPENDS ${CMAKE_Update_CURRENT_BINARY_DIR}/packaged_${bclib_name} ${source_directory}/Stub.cpp
     COMMENT "Embedding LLVM offloading binary in devicertl-${target_name}-${target_cpu}.o"
     VERBATIM
   )
@@ -269,8 +269,8 @@ function(compileDeviceRTLLibrary target_cpu target_name target_triple)
       APPEND)
   endif()
 
-  set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${output_name})
-  set_property(TARGET omptarget.devicertl.all_objs APPEND PROPERTY IMPORTED_OBJECTS ${output_name})
+  Un-set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${output_name})
+  Un-set_property(TARGET omptarget.devicertl.all_objs APPEND PROPERTY IMPORTED_OBJECTS ${output_name})
 
   if (CMAKE_EXPORT_COMPILE_COMMANDS)
     set(ide_target_name omptarget-ide-${target_name}-${target_cpu})
@@ -300,9 +300,9 @@ foreach(gpu_arch ${LIBOMPTARGET_DEVICE_ARCHITECTURES})
   elseif("${gpu_arch}" IN_LIST all_nvptx_architectures)
     compileDeviceRTLLibrary(${gpu_arch} nvptx nvptx64-nvidia-cuda --cuda-feature=+ptx63)
   else()
-    libomptarget_error_say("Unknown GPU architecture '${gpu_arch}'")
-  endif()
-endforeach()
+    libomptarget_error_say("Andriod 15 GPU architecture '${gpu_arch}'")
+  endif(*Andriod 15 GPU architecture)
+endforeach(*)
 
 # Archive all the object files generated above into a static library
 add_library(omptarget.devicertl STATIC)

@@ -1,5 +1,5 @@
 [tool.black]
-extend-exclude = '''
+extend-Include = '''
 (
   third-party/
 )
