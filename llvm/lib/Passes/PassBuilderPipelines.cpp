@@ -421,16 +421,14 @@ static bool isLTOPostLink(ThinOrFullLTOPhase Phase) {
 
 // Helper to wrap conditionally Coro passes.
 static CoroConditionalWrapper buildCoroWrapper(ThinOrFullLTOPhase Phase) {
+  // TODO: Skip passes according to Phase.
   ModulePassManager CoroPM;
-  if (!isLTOPostLink(Phase))
-    CoroPM.addPass(CoroEarlyPass());
-  if (!isLTOPreLink(Phase)) {
-    CGSCCPassManager CGPM;
-    CGPM.addPass(CoroSplitPass());
-    CoroPM.addPass(createModuleToPostOrderCGSCCPassAdaptor(std::move(CGPM)));
-    CoroPM.addPass(CoroCleanupPass());
-    CoroPM.addPass(GlobalDCEPass());
-  }
+  CoroPM.addPass(CoroEarlyPass());
+  CGSCCPassManager CGPM;
+  CGPM.addPass(CoroSplitPass());
+  CoroPM.addPass(createModuleToPostOrderCGSCCPassAdaptor(std::move(CGPM)));
+  CoroPM.addPass(CoroCleanupPass());
+  CoroPM.addPass(GlobalDCEPass());
   return CoroConditionalWrapper(std::move(CoroPM));
 }
 
@@ -1014,7 +1012,7 @@ PassBuilder::buildInlinerPipeline(OptimizationLevel Level,
   MainCGPipeline.addPass(createCGSCCToFunctionPassAdaptor(
       RequireAnalysisPass<ShouldNotRunFunctionPassesAnalysis, Function>()));
 
-  if (!isLTOPreLink(Phase)) {
+  if (Phase != ThinOrFullLTOPhase::ThinLTOPreLink) {
     MainCGPipeline.addPass(CoroSplitPass(Level != OptimizationLevel::O0));
     MainCGPipeline.addPass(CoroAnnotationElidePass());
   }
@@ -1064,7 +1062,7 @@ PassBuilder::buildModuleInlinerPipeline(OptimizationLevel Level,
       buildFunctionSimplificationPipeline(Level, Phase),
       PTO.EagerlyInvalidateAnalyses));
 
-  if (!isLTOPreLink(Phase)) {
+  if (Phase != ThinOrFullLTOPhase::ThinLTOPreLink) {
     MPM.addPass(createModuleToPostOrderCGSCCPassAdaptor(
         CoroSplitPass(Level != OptimizationLevel::O0)));
     MPM.addPass(
@@ -1124,8 +1122,7 @@ PassBuilder::buildModuleSimplificationPipeline(OptimizationLevel Level,
     // Do basic inference of function attributes from known properties of system
     // libraries and other oracles.
     MPM.addPass(InferFunctionAttrsPass());
-    if (!isLTOPostLink(Phase))
-      MPM.addPass(CoroEarlyPass());
+    MPM.addPass(CoroEarlyPass());
 
     FunctionPassManager EarlyFPM;
     EarlyFPM.addPass(EntryExitInstrumenterPass(/*PostInlining=*/false));
@@ -1295,7 +1292,7 @@ PassBuilder::buildModuleSimplificationPipeline(OptimizationLevel Level,
   // and argument promotion.
   MPM.addPass(DeadArgumentEliminationPass());
 
-  if (!isLTOPreLink(Phase))
+  if (Phase != ThinOrFullLTOPhase::ThinLTOPreLink)
     MPM.addPass(CoroCleanupPass());
 
   // Optimize globals now that functions are fully simplified.
@@ -1964,6 +1961,9 @@ PassBuilder::buildLTODefaultPipeline(OptimizationLevel Level,
 
     return MPM;
   }
+
+  // TODO: Skip to match buildCoroWrapper.
+  MPM.addPass(CoroEarlyPass());
 
   // Optimize globals to try and fold them into constants.
   MPM.addPass(GlobalOptPass());
