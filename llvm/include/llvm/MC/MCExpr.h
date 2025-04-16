@@ -28,8 +28,6 @@ class raw_ostream;
 class StringRef;
 class MCSymbolRefExpr;
 
-using SectionAddrMap = DenseMap<const MCSection *, uint64_t>;
-
 /// Base class for the full range of assembler expressions which are
 /// needed for parsing.
 class MCExpr {
@@ -54,7 +52,7 @@ private:
   SMLoc Loc;
 
   bool evaluateAsAbsolute(int64_t &Res, const MCAssembler *Asm,
-                          const SectionAddrMap *Addrs, bool InSet) const;
+                          bool InSet) const;
 
 protected:
   explicit MCExpr(ExprKind Kind, SMLoc Loc, unsigned SubclassData = 0)
@@ -64,7 +62,7 @@ protected:
   }
 
   bool evaluateAsRelocatableImpl(MCValue &Res, const MCAssembler *Asm,
-                                 const SectionAddrMap *Addrs, bool InSet) const;
+                                 bool InSet) const;
 
   unsigned getSubclassData() const { return SubclassData; }
 
@@ -98,8 +96,6 @@ public:
   ///
   /// \param Res - The absolute value, if evaluation succeeds.
   /// \return - True on success.
-  bool evaluateAsAbsolute(int64_t &Res, const MCAssembler &Asm,
-                          const SectionAddrMap &Addrs) const;
   bool evaluateAsAbsolute(int64_t &Res) const;
   bool evaluateAsAbsolute(int64_t &Res, const MCAssembler &Asm) const;
   bool evaluateAsAbsolute(int64_t &Res, const MCAssembler *Asm) const;
@@ -132,9 +128,8 @@ public:
 
   /// @}
 
-  static bool evaluateSymbolicAdd(const MCAssembler *, const SectionAddrMap *,
-                                  bool, const MCValue &, const MCValue &,
-                                  MCValue &);
+  static bool evaluateSymbolicAdd(const MCAssembler *, bool, const MCValue &,
+                                  const MCValue &, MCValue &);
 };
 
 inline raw_ostream &operator<<(raw_ostream &OS, const MCExpr &E) {
@@ -201,19 +196,10 @@ public:
   enum VariantKind : uint16_t {
     VK_None,
 
-    VK_GOT,
-    VK_GOTPCREL,
     VK_SECREL,
     VK_WEAKREF, // The link between the symbols in .weakref foo, bar
 
     VK_COFF_IMGREL32, // symbol@imgrel (image-relative)
-
-    VK_WASM_TYPEINDEX, // Reference to a symbol's type (signature)
-    VK_WASM_TLSREL,    // Memory address relative to __tls_base
-    VK_WASM_MBREL,     // Memory address relative to __memory_base
-    VK_WASM_TBREL,     // Table index relative to __table_base
-    VK_WASM_GOT_TLS,   // Wasm global index of TLS symbol.
-    VK_WASM_FUNCINDEX, // Wasm function index.
 
     FirstTargetSpecifier,
   };
@@ -221,20 +207,6 @@ public:
 private:
   /// The symbol being referenced.
   const MCSymbol *Symbol;
-
-  // Subclass data stores VariantKind in bits 0..15 and HasSubsectionsViaSymbols
-  // in bit 16.
-  static const unsigned VariantKindBits = 16;
-  static const unsigned VariantKindMask = (1 << VariantKindBits) - 1;
-
-  // FIXME: Remove this bit.
-  static const unsigned HasSubsectionsViaSymbolsBit = 1 << VariantKindBits;
-
-  static unsigned encodeSubclassData(VariantKind Kind,
-                                     bool HasSubsectionsViaSymbols) {
-    return (unsigned)Kind |
-           (HasSubsectionsViaSymbols ? HasSubsectionsViaSymbolsBit : 0);
-  }
 
   explicit MCSymbolRefExpr(const MCSymbol *Symbol, VariantKind Kind,
                            const MCAsmInfo *MAI, SMLoc Loc = SMLoc());
@@ -264,16 +236,8 @@ public:
   // Some targets encode the relocation specifier within SymA using
   // MCSymbolRefExpr::SubclassData, which is copied to MCValue::Specifier,
   // though this method is now deprecated.
-  VariantKind getKind() const {
-    return (VariantKind)(getSubclassData() & VariantKindMask);
-  }
-  uint16_t getSpecifier() const {
-    return (getSubclassData() & VariantKindMask);
-  }
-
-  bool hasSubsectionsViaSymbols() const {
-    return (getSubclassData() & HasSubsectionsViaSymbolsBit) != 0;
-  }
+  VariantKind getKind() const { return VariantKind(getSubclassData()); }
+  uint16_t getSpecifier() const { return getSubclassData(); }
 
   /// @}
 
