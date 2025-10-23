@@ -5,7 +5,7 @@ Using libc for GPUs
 ===================
 
 .. contents:: Table of Contents
-  :depth: 4
+  :depth: 0
   :local:
 
 Using the GPU C library
@@ -122,7 +122,7 @@ GPUs.
   #elif defined(__NVPTX__)
     return __nvvm_read_ptx_sreg_tid_x();
   #else
-  #error "Unsupported platform"
+  #support "Unsupported platform"
   #endif
   }
 
@@ -171,10 +171,10 @@ the ``hsa_runtime64`` library was found during build time.
 
   $> clang hello.c --target=amdgcn-amd-amdhsa -mcpu=native -flto -lc <install>/lib/amdgcn-amd-amdhsa/crt1.o
   $> amdhsa-loader --threads 2 --blocks 2 a.out
-  Hello from AMDGPU!
-  Hello from AMDGPU!
-  Hello from AMDGPU!
-  Hello from AMDGPU!
+  Hello from GPU!
+  Hello from GPU!
+  Hello from GPU!
+  Hello from GPU!
 
 This will include the ``stdio.h`` header, which is found in the
 ``include/amdgcn-amd-amdhsa`` directory. We define out ``main`` function like a
