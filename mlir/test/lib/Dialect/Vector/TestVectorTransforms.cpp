@@ -17,7 +17,7 @@
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
-#include "mlir/Dialect/Vector/VectorTransforms.h"
+#include "mlir/Dialect/Vector/Transforms/VectorTransforms.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
@@ -470,9 +470,9 @@ struct TestVectorTransferFullPartialSplitPatterns
   }
 
   Option<bool> useLinalgOps{
-      *this, "use-linalg-copy",
+      *this, "use-memref-copy",
       llvm::cl::desc("Split using a unmasked vector.transfer + linalg.fill + "
-                     "linalg.copy operations."),
+                     "memref.copy operations."),
       llvm::cl::init(false)};
   void runOnOperation() override {
     MLIRContext *ctx = &getContext();

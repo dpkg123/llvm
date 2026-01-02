@@ -687,9 +687,9 @@ void UnwrappedLineParser::calculateBraceTypes(bool ExpectClassBody) {
   } while (Tok->Tok.isNot(tok::eof) && !LBraceStack.empty());
 
   // Assume other blocks for all unclosed opening braces.
-  for (unsigned i = 0, e = LBraceStack.size(); i != e; ++i) {
-    if (LBraceStack[i]->is(BK_Unknown))
-      LBraceStack[i]->setBlockKind(BK_Block);
+  for (FormatToken *LBrace : LBraceStack) {
+    if (LBrace->is(BK_Unknown))
+      LBrace->setBlockKind(BK_Block);
   }
 
   FormatTok = Tokens->setPosition(StoredPosition);
@@ -2708,14 +2708,25 @@ void UnwrappedLineParser::parseSwitch() {
 }
 
 void UnwrappedLineParser::parseAccessSpecifier() {
+  FormatToken *AccessSpecifierCandidate = FormatTok;
   nextToken();
   // Understand Qt's slots.
   if (FormatTok->isOneOf(Keywords.kw_slots, Keywords.kw_qslots))
     nextToken();
   // Otherwise, we don't know what it is, and we'd better keep the next token.
-  if (FormatTok->Tok.is(tok::colon))
+  if (FormatTok->Tok.is(tok::colon)) {
     nextToken();
-  addUnwrappedLine();
+    addUnwrappedLine();
+  } else if (!FormatTok->Tok.is(tok::coloncolon) &&
+             !std::binary_search(COperatorsFollowingVar.begin(),
+                                 COperatorsFollowingVar.end(),
+                                 FormatTok->Tok.getKind())) {
+    // Not a variable name nor namespace name.
+    addUnwrappedLine();
+  } else if (AccessSpecifierCandidate) {
+    // Consider the access specifier to be a C identifier.
+    AccessSpecifierCandidate->Tok.setKind(tok::identifier);
+  }
 }
 
 void UnwrappedLineParser::parseConcept() {
@@ -3091,7 +3102,8 @@ void UnwrappedLineParser::parseRecord(bool ParseAsExpr) {
       }
       if (FormatTok->is(tok::l_square)) {
         FormatToken *Previous = FormatTok->Previous;
-        if (!Previous || Previous->isNot(tok::r_paren)) {
+        if (!Previous ||
+            !(Previous->is(tok::r_paren) || Previous->isTypeOrIdentifier())) {
           // Don't try parsing a lambda if we had a closing parenthesis before,
           // it was probably a pointer to an array: int (*)[].
           if (!tryToParseLambda())

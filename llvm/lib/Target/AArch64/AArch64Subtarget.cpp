@@ -99,6 +99,7 @@ void AArch64Subtarget::initializeProperties() {
   case CortexA78C:
   case CortexR82:
   case CortexX1:
+  case CortexX1C:
     PrefFunctionLogAlignment = 4;
     break;
   case CortexA510:
@@ -219,6 +220,12 @@ void AArch64Subtarget::initializeProperties() {
     MaxPrefetchIterationsAhead = 4;
     // FIXME: remove this to enable 64-bit SLP if performance looks good.
     MinVectorRegisterBitWidth = 128;
+    break;
+  case Ampere1:
+    CacheLineSize = 64;
+    PrefFunctionLogAlignment = 6;
+    PrefLoopLogAlignment = 6;
+    MaxInterleaveFactor = 4;
     break;
   }
 }

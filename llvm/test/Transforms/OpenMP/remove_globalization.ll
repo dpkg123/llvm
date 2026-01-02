@@ -181,15 +181,15 @@ declare void @unknown_no_openmp() "llvm.assume"="omp_no_openmp"
 !14 = !DILocation(line: 6, column: 2, scope: !9)
 ;.
 ; CHECK: attributes #[[ATTR0]] = { nosync nounwind }
-; CHECK: attributes #[[ATTR1]] = { nofree nosync nounwind readnone willreturn }
-; CHECK: attributes #[[ATTR2]] = { nofree nosync nounwind willreturn writeonly }
+; CHECK: attributes #[[ATTR1]] = { nofree norecurse nosync nounwind readnone willreturn }
+; CHECK: attributes #[[ATTR2]] = { nofree norecurse nosync nounwind willreturn writeonly }
 ; CHECK: attributes #[[ATTR3]] = { "llvm.assume"="omp_no_openmp" }
 ; CHECK: attributes #[[ATTR4]] = { nounwind }
 ; CHECK: attributes #[[ATTR5]] = { nosync nounwind writeonly }
 ;.
 ; CHECK-DISABLED: attributes #[[ATTR0]] = { nosync nounwind }
-; CHECK-DISABLED: attributes #[[ATTR1]] = { nofree nosync nounwind readnone willreturn }
-; CHECK-DISABLED: attributes #[[ATTR2]] = { nofree nosync nounwind willreturn writeonly }
+; CHECK-DISABLED: attributes #[[ATTR1]] = { nofree norecurse nosync nounwind readnone willreturn }
+; CHECK-DISABLED: attributes #[[ATTR2]] = { nofree norecurse nosync nounwind willreturn writeonly }
 ; CHECK-DISABLED: attributes #[[ATTR3]] = { "llvm.assume"="omp_no_openmp" }
 ; CHECK-DISABLED: attributes #[[ATTR4]] = { nounwind }
 ; CHECK-DISABLED: attributes #[[ATTR5]] = { nosync nounwind writeonly }

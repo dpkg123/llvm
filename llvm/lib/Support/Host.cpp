@@ -211,6 +211,7 @@ StringRef sys::detail::getHostCPUNameForARM(StringRef ProcCpuinfoContent) {
         .Case("0xd0d", "cortex-a77")
         .Case("0xd41", "cortex-a78")
         .Case("0xd44", "cortex-x1")
+        .Case("0xd4c", "cortex-x1c")
         .Case("0xd0c", "neoverse-n1")
         .Case("0xd49", "neoverse-n2")
         .Case("0xd40", "neoverse-v1")
@@ -293,6 +294,12 @@ StringRef sys::detail::getHostCPUNameForARM(StringRef ProcCpuinfoContent) {
     case 0x1003:
       return "exynos-m4";
     }
+  }
+
+  if (Implementer == "0xc0") { // Ampere Computing
+    return StringSwitch<const char *>(Part)
+        .Case("0xac3", "ampere1")
+        .Default("generic");
   }
 
   return "generic";

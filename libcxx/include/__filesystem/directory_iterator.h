@@ -133,7 +133,7 @@ _LIBCPP_AVAILABILITY_FILESYSTEM_POP
 
 _LIBCPP_END_NAMESPACE_FILESYSTEM
 
-#if !defined(_LIBCPP_HAS_NO_RANGES)
+#if !defined(_LIBCPP_HAS_NO_CONCEPTS)
 
 template <>
 _LIBCPP_AVAILABILITY_FILESYSTEM
@@ -143,7 +143,7 @@ template <>
 _LIBCPP_AVAILABILITY_FILESYSTEM
 inline constexpr bool _VSTD::ranges::enable_view<_VSTD_FS::directory_iterator> = true;
 
-#endif
+#endif // !defined(_LIBCPP_HAS_NO_CONCEPTS)
 
 #endif // _LIBCPP_CXX03_LANG
 

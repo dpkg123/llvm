@@ -84,6 +84,7 @@
 #include "llvm/Transforms/Utils/CanonicalizeAliases.h"
 #include "llvm/Transforms/Utils/Debugify.h"
 #include "llvm/Transforms/Utils/EntryExitInstrumenter.h"
+#include "llvm/Transforms/Utils/ModuleUtils.h"
 #include "llvm/Transforms/Utils/NameAnonGlobals.h"
 #include "llvm/Transforms/Utils/SymbolRewriter.h"
 #include <memory>
@@ -998,6 +999,8 @@ void EmitAssemblyHelper::EmitAssemblyWithLegacyPassManager(
   if (TM)
     TheModule->setDataLayout(TM->createDataLayout());
 
+  errs() << TheModule->getName() << "\n\n";
+
   DebugifyCustomPassManager PerModulePasses;
   DebugInfoPerPassMap DIPreservationMap;
   if (CodeGenOpts.EnableDIPreservationVerify) {
@@ -1556,6 +1559,8 @@ void EmitAssemblyHelper::EmitAssembly(BackendAction Action,
   if (TM)
     TheModule->setDataLayout(TM->createDataLayout());
 
+  errs() << TheModule->getName() << "\n\n";
+
   // Before executing passes, print the final values of the LLVM options.
   cl::PrintOptionValues();
 
@@ -1745,8 +1750,36 @@ void clang::EmbedBitcode(llvm::Module *M, const CodeGenOptions &CGOpts,
                          llvm::MemoryBufferRef Buf) {
   if (CGOpts.getEmbedBitcode() == CodeGenOptions::Embed_Off)
     return;
-  llvm::EmbedBitcodeInModule(
+  llvm::embedBitcodeInModule(
       *M, Buf, CGOpts.getEmbedBitcode() != CodeGenOptions::Embed_Marker,
       CGOpts.getEmbedBitcode() != CodeGenOptions::Embed_Bitcode,
       CGOpts.CmdArgs);
+}
+
+void clang::EmbedObject(llvm::Module *M, const CodeGenOptions &CGOpts,
+                        DiagnosticsEngine &Diags) {
+  if (CGOpts.OffloadObjects.empty())
+    return;
+
+  for (StringRef OffloadObject : CGOpts.OffloadObjects) {
+    if (OffloadObject.count(',') != 1) {
+      Diags.Report(Diags.getCustomDiagID(
+          DiagnosticsEngine::Error, "Invalid string pair for embedding '%0'"))
+          << OffloadObject;
+      return;
+    }
+    auto FilenameAndSection = OffloadObject.split(',');
+    llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> ObjectOrErr =
+        llvm::MemoryBuffer::getFileOrSTDIN(std::get<0>(FilenameAndSection));
+    if (std::error_code EC = ObjectOrErr.getError()) {
+      auto DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+                                          "could not open '%0' for embedding");
+      Diags.Report(DiagID) << std::get<0>(FilenameAndSection);
+      return;
+    }
+
+    SmallString<128> SectionName(
+        {".llvm.offloading.", std::get<1>(FilenameAndSection)});
+    llvm::embedBufferInModule(*M, **ObjectOrErr, SectionName);
+  }
 }

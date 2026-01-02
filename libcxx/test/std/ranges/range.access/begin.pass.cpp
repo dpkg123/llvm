@@ -8,7 +8,6 @@
 
 // UNSUPPORTED: c++03, c++11, c++14, c++17
 // UNSUPPORTED: libcpp-no-concepts
-// UNSUPPORTED: libcpp-has-no-incomplete-ranges
 
 // std::ranges::begin
 // std::ranges::cbegin
@@ -31,9 +30,26 @@ static_assert( std::is_invocable_v<RangeBeginT, int (&)[]>);
 
 struct Incomplete;
 static_assert(!std::is_invocable_v<RangeBeginT, Incomplete(&&)[]>);
-static_assert(!std::is_invocable_v<RangeBeginT, Incomplete(&&)[42]>);
+static_assert(!std::is_invocable_v<RangeBeginT, const Incomplete(&&)[]>);
 static_assert(!std::is_invocable_v<RangeCBeginT, Incomplete(&&)[]>);
-static_assert(!std::is_invocable_v<RangeCBeginT, Incomplete(&&)[42]>);
+static_assert(!std::is_invocable_v<RangeCBeginT, const Incomplete(&&)[]>);
+
+static_assert(!std::is_invocable_v<RangeBeginT, Incomplete(&&)[10]>);
+static_assert(!std::is_invocable_v<RangeBeginT, const Incomplete(&&)[10]>);
+static_assert(!std::is_invocable_v<RangeCBeginT, Incomplete(&&)[10]>);
+static_assert(!std::is_invocable_v<RangeCBeginT, const Incomplete(&&)[10]>);
+
+// This case is IFNDR; we handle it SFINAE-friendly.
+LIBCPP_STATIC_ASSERT(!std::is_invocable_v<RangeBeginT, Incomplete(&)[]>);
+LIBCPP_STATIC_ASSERT(!std::is_invocable_v<RangeBeginT, const Incomplete(&)[]>);
+LIBCPP_STATIC_ASSERT(!std::is_invocable_v<RangeCBeginT, Incomplete(&)[]>);
+LIBCPP_STATIC_ASSERT(!std::is_invocable_v<RangeCBeginT, const Incomplete(&)[]>);
+
+// This case is IFNDR; we handle it SFINAE-friendly.
+LIBCPP_STATIC_ASSERT(!std::is_invocable_v<RangeBeginT, Incomplete(&)[10]>);
+LIBCPP_STATIC_ASSERT(!std::is_invocable_v<RangeBeginT, const Incomplete(&)[10]>);
+LIBCPP_STATIC_ASSERT(!std::is_invocable_v<RangeCBeginT, Incomplete(&)[10]>);
+LIBCPP_STATIC_ASSERT(!std::is_invocable_v<RangeCBeginT, const Incomplete(&)[10]>);
 
 struct BeginMember {
   int x;

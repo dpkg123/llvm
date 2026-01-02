@@ -618,18 +618,6 @@ operator+(const basic_string<_CharT, _Traits, _Allocator>& __x, _CharT __y);
 
 _LIBCPP_EXTERN_TEMPLATE(_LIBCPP_FUNC_VIS string operator+<char, char_traits<char>, allocator<char> >(char const*, string const&))
 
-#ifndef _LIBCPP_ABI_NO_BASIC_STRING_BASE_CLASS
-template <bool>
-struct __basic_string_common;
-
-template <>
-struct __basic_string_common<true> {
-    // Both are defined in string.cpp
-    _LIBCPP_NORETURN _LIBCPP_EXPORTED_FROM_ABI void __throw_length_error() const;
-    _LIBCPP_NORETURN _LIBCPP_EXPORTED_FROM_ABI void __throw_out_of_range() const;
-};
-#endif
-
 template <class _Iter>
 struct __string_is_trivial_iterator : public false_type {};
 
@@ -682,9 +670,6 @@ class
     _LIBCPP_PREFERRED_NAME(u32string)
 #endif
     basic_string
-#ifndef _LIBCPP_ABI_NO_BASIC_STRING_BASE_CLASS
-    : private __basic_string_common<true> // This base class is historical, but it needs to remain for ABI compatibility
-#endif
 {
 public:
     typedef basic_string                                 __self;
@@ -2912,6 +2897,10 @@ template <class _CharT, class _Traits, class _Allocator>
 typename basic_string<_CharT, _Traits, _Allocator>::iterator
 basic_string<_CharT, _Traits, _Allocator>::insert(const_iterator __pos, value_type __c)
 {
+    _LIBCPP_DEBUG_ASSERT(__get_const_db()->__find_c_from_i(&__pos) == this,
+                         "string::insert(iterator, character) called with an iterator not"
+                         " referring to this string");
+
     size_type __ip = static_cast<size_type>(__pos - begin());
     size_type __sz = size();
     size_type __cap = capacity();

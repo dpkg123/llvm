@@ -40,6 +40,7 @@ public:
   enum ARMProcFamilyEnum : uint8_t {
     Others,
     A64FX,
+    Ampere1,
     AppleA7,
     AppleA10,
     AppleA11,
@@ -63,6 +64,7 @@ public:
     CortexA710,
     CortexR82,
     CortexX1,
+    CortexX1C,
     CortexX2,
     ExynosM3,
     Falkor,
@@ -217,7 +219,6 @@ protected:
   bool HasETE = false;
   bool HasTRBE = false;
   bool HasBRBE = false;
-  bool HasPAUTH = false;
   bool HasSPE_EEF = false;
 
   // HasZeroCycleRegMove - Has zero-cycle register mov instructions.
@@ -242,6 +243,10 @@ protected:
 
   // Enable 64-bit vectorization in SLP.
   unsigned MinVectorRegisterBitWidth = 64;
+
+  // Do not place a BTI instruction after a call to a return twice function like
+  // setjmp.
+  bool NoBTIAtReturnTwice = false;
 
   bool OutlineAtomics = false;
   bool PredictableSelectIsExpensive = false;
@@ -510,7 +515,6 @@ public:
   bool hasRandGen() const { return HasRandGen; }
   bool hasMTE() const { return HasMTE; }
   bool hasTME() const { return HasTME; }
-  bool hasPAUTH() const { return HasPAUTH; }
   // Arm SVE2 extensions
   bool hasSVE2AES() const { return HasSVE2AES; }
   bool hasSVE2SM4() const { return HasSVE2SM4; }
@@ -588,6 +592,8 @@ public:
   bool hasMOPS() const { return HasMOPS; }
 
   bool fixCortexA53_835769() const { return FixCortexA53_835769; }
+
+  bool noBTIAtReturnTwice() const { return NoBTIAtReturnTwice; }
 
   bool addrSinkUsingGEPs() const override {
     // Keeping GEPs inbounds is important for exploiting AArch64

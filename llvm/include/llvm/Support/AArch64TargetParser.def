@@ -204,6 +204,9 @@ AARCH64_CPU_NAME("cortex-r82", ARMV8R, FK_CRYPTO_NEON_FP_ARMV8, false,
 AARCH64_CPU_NAME("cortex-x1", ARMV8_2A, FK_CRYPTO_NEON_FP_ARMV8, false,
                  (AArch64::AEK_FP16 | AArch64::AEK_DOTPROD | AArch64::AEK_RCPC |
                   AArch64::AEK_SSBS))
+AARCH64_CPU_NAME("cortex-x1c", ARMV8_2A, FK_CRYPTO_NEON_FP_ARMV8, false,
+                 (AArch64::AEK_FP16 | AArch64::AEK_DOTPROD | AArch64::AEK_RCPC |
+                  AArch64::AEK_SSBS | AArch64::AEK_PAUTH))
 AARCH64_CPU_NAME("cortex-x2", ARMV9A, FK_NEON_FP_ARMV8, false,
                  (AArch64::AEK_MTE | AArch64::AEK_BF16 | AArch64::AEK_I8MM |
                   AArch64::AEK_PAUTH | AArch64::AEK_SSBS | AArch64::AEK_SB |
@@ -287,6 +290,8 @@ AARCH64_CPU_NAME("a64fx", ARMV8_2A, FK_CRYPTO_NEON_FP_ARMV8, false,
                  (AArch64::AEK_FP16 | AArch64::AEK_SVE))
 AARCH64_CPU_NAME("carmel", ARMV8_2A, FK_CRYPTO_NEON_FP_ARMV8, false,
                  AArch64::AEK_FP16)
+AARCH64_CPU_NAME("ampere1", ARMV8_6A, FK_CRYPTO_NEON_FP_ARMV8, false,
+                 (AArch64::AEK_FP16 | AArch64::AEK_SB | AArch64::AEK_SSBS))
 // Invalid CPU
 AARCH64_CPU_NAME("invalid", INVALID, FK_INVALID, true, AArch64::AEK_INVALID)
 #undef AARCH64_CPU_NAME

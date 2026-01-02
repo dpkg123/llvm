@@ -363,6 +363,7 @@ public:
   RelExpr getRelExpr(RelType type, const Symbol &s,
                      const uint8_t *loc) const override;
   RelType getDynRel(RelType type) const override;
+  int64_t getImplicitAddend(const uint8_t *buf, RelType type) const override;
   void writePltHeader(uint8_t *buf) const override;
   void writePlt(uint8_t *buf, const Symbol &sym,
                 uint64_t pltEntryAddr) const override;
@@ -1059,6 +1060,22 @@ RelType PPC64::getDynRel(RelType type) const {
   return R_PPC64_NONE;
 }
 
+int64_t PPC64::getImplicitAddend(const uint8_t *buf, RelType type) const {
+  switch (type) {
+  case R_PPC64_NONE:
+    return 0;
+  case R_PPC64_REL32:
+    return SignExtend64<32>(read32(buf));
+  case R_PPC64_ADDR64:
+  case R_PPC64_REL64:
+    return read64(buf);
+  default:
+    internalLinkerError(getErrorLocation(buf),
+                        "cannot read addend for relocation " + toString(type));
+    return 0;
+  }
+}
+
 void PPC64::writeGotHeader(uint8_t *buf) const {
   write64(buf, getPPC64TocBase());
 }
@@ -1368,9 +1385,10 @@ bool PPC64::needsThunk(RelExpr expr, RelType type, const InputFile *file,
   if (type == R_PPC64_REL24_NOTOC && (s.stOther >> 5) > 1)
     return true;
 
-  // If a symbol is a weak undefined and we are compiling an executable
-  // it doesn't need a range-extending thunk since it can't be called.
-  if (s.isUndefWeak() && !config->shared)
+  // An undefined weak symbol not in a PLT does not need a thunk. If it is
+  // hidden, its binding has been converted to local, so we just check
+  // isUndefined() here. A undefined non-weak symbol has been errored.
+  if (s.isUndefined())
     return false;
 
   // If the offset exceeds the range of the branch type then it will need

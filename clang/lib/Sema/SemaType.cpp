@@ -2271,7 +2271,7 @@ QualType Sema::BuildBitIntType(bool IsUnsigned, Expr *BitWidth,
   const TargetInfo &TI = getASTContext().getTargetInfo();
   if (NumBits > TI.getMaxBitIntWidth()) {
     Diag(Loc, diag::err_bit_int_max_size)
-        << IsUnsigned << TI.getMaxBitIntWidth();
+        << IsUnsigned << static_cast<uint64_t>(TI.getMaxBitIntWidth());
     return QualType();
   }
 

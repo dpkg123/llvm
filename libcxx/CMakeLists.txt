@@ -27,10 +27,12 @@ set(LIBCXX_BINARY_DIR  ${CMAKE_CURRENT_BINARY_DIR})
 set(LIBCXX_BINARY_INCLUDE_DIR "${LIBCXX_BINARY_DIR}/include/c++build")
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR OR LIBCXX_STANDALONE_BUILD)
+  message(WARNING "The Standalone build is deprecated in this release. Please use one of the ways "
+                  "described at https://libcxx.llvm.org/BuildingLibcxx.html for building libc++.")
   project(libcxx CXX C)
 
   set(PACKAGE_NAME libcxx)
-  set(PACKAGE_VERSION 14.0.0git)
+  set(PACKAGE_VERSION 14.0.6)
   set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
   set(PACKAGE_BUGREPORT "llvm-bugs@lists.llvm.org")
 
@@ -133,7 +135,7 @@ option(LIBCXX_ENABLE_INCOMPLETE_FEATURES
     "Whether to enable support for incomplete library features. Incomplete features
     are new library features under development. These features don't guarantee
     ABI stability nor the quality of completed library features. Vendors
-    shipping the library may want to disable this option." ON)
+    shipping the library may want to disable this option." OFF)
 set(LIBCXX_TEST_CONFIG "legacy.cfg.in" CACHE STRING
     "The path to the Lit testing configuration to use when running the tests.
      If a relative path is provided, it is assumed to be relative to '<monorepo>/libcxx/test/configs'.")
@@ -269,6 +271,16 @@ option(LIBCXXABI_USE_LLVM_UNWINDER "Build and use the LLVM unwinder." OFF)
 option(LIBCXX_BUILD_32_BITS "Build 32 bit multilib libc++. This option is not supported anymore when building the runtimes. Please specify a full triple instead." ${LLVM_BUILD_32_BITS})
 if (LIBCXX_BUILD_32_BITS)
   message(FATAL_ERROR "LIBCXX_BUILD_32_BITS is not supported anymore when building the runtimes, please specify a full triple instead.")
+endif()
+
+if(NOT CMAKE_SYSROOT AND LIBCXX_SYSROOT)
+  message(WARNING "LIBCXX_SYSROOT is deprecated, please use CMAKE_SYSROOT instead")
+endif()
+if(NOT CMAKE_CXX_COMPILER_TARGET AND LIBCXX_TARGET_TRIPLE)
+  message(WARNING "LIBCXX_TARGET_TRIPLE is deprecated, please use CMAKE_CXX_COMPILER_TARGET instead")
+endif()
+if(NOT CMAKE_CXX_COMPILER_EXTERNAL_TOOLCHAIN AND LIBCXX_GCC_TOOLCHAIN)
+  message(WARNING "LIBCXX_GCC_TOOLCHAIN is deprecated, please use CMAKE_CXX_COMPILER_EXTERNAL_TOOLCHAIN instead")
 endif()
 
 if(CMAKE_CXX_COMPILER_TARGET)

@@ -2,7 +2,8 @@
 // since __config may be included from C headers which may create an
 // include cycle.
 module std_config [system] [extern_c] {
-    header "__config"
+  textual header "__config"
+  textual header "__config_site"
 }
 
 module std [system] {
@@ -246,6 +247,7 @@ module std [system] {
       module generate                 { private header "__algorithm/generate.h" }
       module generate_n               { private header "__algorithm/generate_n.h" }
       module half_positive            { private header "__algorithm/half_positive.h" }
+      module in_in_out_result         { private header "__algorithm/in_in_out_result.h" }
       module in_in_result             { private header "__algorithm/in_in_result.h" }
       module in_out_result            { private header "__algorithm/in_out_result.h" }
       module includes                 { private header "__algorithm/includes.h" }
@@ -815,6 +817,7 @@ module std [system] {
         export functional.__functional.perfect_forward
       }
       module view_interface         { private header "__ranges/view_interface.h" }
+      module views                  { private header "__ranges/views.h" }
     }
   }
   module ratio {
