@@ -22,6 +22,7 @@
 #include "llvm/CodeGen/MIRPrinter.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
+#include "llvm/CodeGen/MachineVerifier.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
@@ -838,7 +839,7 @@ static int prepareDumpIRFileDescriptor(const StringRef DumpIRFilename) {
   }
   int Result = 0;
   EC = sys::fs::openFile(DumpIRFilename, Result, sys::fs::CD_OpenAlways,
-                         sys::fs::FA_Write, sys::fs::OF_None);
+                         sys::fs::FA_Write, sys::fs::OF_Text);
   if (EC)
     report_fatal_error(Twine("Failed to open ") + DumpIRFilename +
                        " to support -ir-dump-directory: " + EC.message());
@@ -1450,10 +1451,10 @@ void PreservedCFGCheckerInstrumentation::registerCallbacks(
   });
 }
 
-void VerifyInstrumentation::registerCallbacks(
-    PassInstrumentationCallbacks &PIC) {
+void VerifyInstrumentation::registerCallbacks(PassInstrumentationCallbacks &PIC,
+                                              ModuleAnalysisManager *MAM) {
   PIC.registerAfterPassCallback(
-      [this](StringRef P, Any IR, const PreservedAnalyses &PassPA) {
+      [this, MAM](StringRef P, Any IR, const PreservedAnalyses &PassPA) {
         if (isIgnored(P) || P == "VerifierPass")
           return;
         const auto *F = unwrapIR<Function>(IR);
@@ -1487,15 +1488,23 @@ void VerifyInstrumentation::registerCallbacks(
                                          P));
           }
 
-          // TODO: Use complete MachineVerifierPass.
           if (auto *MF = unwrapIR<MachineFunction>(IR)) {
             if (DebugLogging)
               dbgs() << "Verifying machine function " << MF->getName() << '\n';
-            verifyMachineFunction(
+            std::string Banner =
                 formatv("Broken machine function found after pass "
                         "\"{0}\", compilation aborted!",
-                        P),
-                *MF);
+                        P);
+            if (MAM) {
+              Module &M = const_cast<Module &>(*MF->getFunction().getParent());
+              auto &MFAM =
+                  MAM->getResult<MachineFunctionAnalysisManagerModuleProxy>(M)
+                      .getManager();
+              MachineVerifierPass Verifier(Banner);
+              Verifier.run(const_cast<MachineFunction &>(*MF), MFAM);
+            } else {
+              verifyMachineFunction(Banner, *MF);
+            }
           }
         }
       });
@@ -2514,7 +2523,7 @@ void StandardInstrumentations::registerCallbacks(
   PrintChangedIR.registerCallbacks(PIC);
   PseudoProbeVerification.registerCallbacks(PIC);
   if (VerifyEach)
-    Verify.registerCallbacks(PIC);
+    Verify.registerCallbacks(PIC, MAM);
   PrintChangedDiff.registerCallbacks(PIC);
   WebsiteChangeReporter.registerCallbacks(PIC);
   ChangeTester.registerCallbacks(PIC);

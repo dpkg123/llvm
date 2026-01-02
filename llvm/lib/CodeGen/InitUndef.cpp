@@ -238,7 +238,7 @@ bool InitUndef::processBasicBlock(MachineFunction &MF, MachineBasicBlock &MBB,
     }
 
     if (isEarlyClobberMI(MI)) {
-      if (ST->enableSubRegLiveness())
+      if (MRI->subRegLivenessEnabled())
         Changed |= handleSubReg(MF, MI, DLD);
       Changed |= handleReg(&MI);
     }
@@ -272,6 +272,7 @@ bool InitUndef::runOnMachineFunction(MachineFunction &MF) {
   for (auto *DeadMI : DeadInsts)
     DeadMI->eraseFromParent();
   DeadInsts.clear();
+  NewRegs.clear();
 
   return Changed;
 }

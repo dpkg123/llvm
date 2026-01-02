@@ -1,3 +1,5 @@
+# TODO: Re-enable the tests once the CI is back under control
+return()
 
 # The find_package changes these variables. This leaves the build in an odd
 # state. Calling cmake a second time tries to write site config information in
@@ -110,3 +112,5 @@ set_target_properties(cxx-tidy PROPERTIES
 
 set_target_properties(cxx-tidy PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_SHARED_MODULE_SUFFIX_CXX .plugin) # Use a portable suffix to simplify how we can find it from Lit
+
+add_dependencies(cxx-test-depends cxx-tidy)

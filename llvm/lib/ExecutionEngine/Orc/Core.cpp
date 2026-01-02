@@ -1266,7 +1266,7 @@ JITDylib::JITDylib(ExecutionSession &ES, std::string Name)
 
 std::pair<JITDylib::AsynchronousSymbolQuerySet,
           std::shared_ptr<SymbolDependenceMap>>
-JITDylib::removeTracker(ResourceTracker &RT) {
+JITDylib::IL_removeTracker(ResourceTracker &RT) {
   // Note: Should be called under the session lock.
   assert(State != Closed && "JD is defunct");
 
@@ -1305,9 +1305,7 @@ JITDylib::removeTracker(ResourceTracker &RT) {
       SymbolsToFail.push_back(Sym);
   }
 
-  AsynchronousSymbolQuerySet QueriesToFail;
-  auto Result = ES.runSessionLocked(
-      [&]() { return ES.IL_failSymbols(*this, std::move(SymbolsToFail)); });
+  auto Result = ES.IL_failSymbols(*this, std::move(SymbolsToFail));
 
   // Removed symbols should be taken out of the table altogether.
   for (auto &Sym : SymbolsToRemove) {
@@ -2198,7 +2196,8 @@ Error ExecutionSession::removeResourceTracker(ResourceTracker &RT) {
   runSessionLocked([&] {
     CurrentResourceManagers = ResourceManagers;
     RT.makeDefunct();
-    std::tie(QueriesToFail, FailedSymbols) = RT.getJITDylib().removeTracker(RT);
+    std::tie(QueriesToFail, FailedSymbols) =
+        RT.getJITDylib().IL_removeTracker(RT);
   });
 
   Error Err = Error::success();
@@ -3593,6 +3592,21 @@ ExecutionSession::IL_failSymbols(JITDylib &JD,
       assert(MI.DefiningEDU->Symbols.count(NonOwningSymbolStringPtr(Name)) &&
              "Symbol does not appear in its DefiningEDU");
       MI.DefiningEDU->Symbols.erase(NonOwningSymbolStringPtr(Name));
+
+      // Remove this EDU from the dependants lists of its dependencies.
+      for (auto &[DepJD, DepSyms] : MI.DefiningEDU->Dependencies) {
+        for (auto DepSym : DepSyms) {
+          assert(DepJD->Symbols.count(SymbolStringPtr(DepSym)) &&
+                 "DepSym not in DepJD");
+          assert(DepJD->MaterializingInfos.count(SymbolStringPtr(DepSym)) &&
+                 "DepSym has not MaterializingInfo");
+          auto &SymMI = DepJD->MaterializingInfos[SymbolStringPtr(DepSym)];
+          assert(SymMI.DependantEDUs.count(MI.DefiningEDU.get()) &&
+                 "DefiningEDU missing from DependantEDUs list of dependency");
+          SymMI.DependantEDUs.erase(MI.DefiningEDU.get());
+        }
+      }
+
       MI.DefiningEDU = nullptr;
     } else {
       // Otherwise if there are any EDUs waiting on this symbol then move

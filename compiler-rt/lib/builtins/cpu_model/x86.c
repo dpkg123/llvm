@@ -59,6 +59,7 @@ enum ProcessorTypes {
   INTEL_SIERRAFOREST,
   INTEL_GRANDRIDGE,
   INTEL_CLEARWATERFOREST,
+  AMDFAM1AH,
   CPU_TYPE_MAX
 };
 
@@ -97,6 +98,7 @@ enum ProcessorSubtypes {
   INTEL_COREI7_ARROWLAKE,
   INTEL_COREI7_ARROWLAKE_S,
   INTEL_COREI7_PANTHERLAKE,
+  AMDFAM1AH_ZNVER5,
   CPU_SUBTYPE_MAX
 };
 
@@ -141,7 +143,7 @@ enum ProcessorFeatures {
   FEATURE_AVX512VP2INTERSECT,
   // FIXME: Below Features has some missings comparing to gcc, it's because gcc
   // has some not one-to-one mapped in llvm.
-  FEATURE_3DNOW,
+  // FEATURE_3DNOW,
   // FEATURE_3DNOWP,
   FEATURE_ADX = 40,
   // FEATURE_ABM,
@@ -367,13 +369,13 @@ static void detectX86FamilyModel(unsigned EAX, unsigned *Family,
   }
 }
 
+#define testFeature(F) (Features[F / 32] & (1 << (F % 32))) != 0
+
 static const char *getIntelProcessorTypeAndSubtype(unsigned Family,
                                                    unsigned Model,
                                                    const unsigned *Features,
                                                    unsigned *Type,
                                                    unsigned *Subtype) {
-#define testFeature(F) (Features[F / 32] & (1 << (F % 32))) != 0
-
   // We select CPU strings to match the code in Host.cpp, but we don't use them
   // in compiler-rt.
   const char *CPU = 0;
@@ -662,14 +664,48 @@ static const char *getAMDProcessorTypeAndSubtype(unsigned Family,
                                                  const unsigned *Features,
                                                  unsigned *Type,
                                                  unsigned *Subtype) {
-  // We select CPU strings to match the code in Host.cpp, but we don't use them
-  // in compiler-rt.
   const char *CPU = 0;
 
   switch (Family) {
+  case 4:
+    CPU = "i486";
+    break;
+  case 5:
+    CPU = "pentium";
+    switch (Model) {
+    case 6:
+    case 7:
+      CPU = "k6";
+      break;
+    case 8:
+      CPU = "k6-2";
+      break;
+    case 9:
+    case 13:
+      CPU = "k6-3";
+      break;
+    case 10:
+      CPU = "geode";
+      break;
+    }
+    break;
+  case 6:
+    if (testFeature(FEATURE_SSE)) {
+      CPU = "athlon-xp";
+      break;
+    }
+    CPU = "athlon";
+    break;
+  case 15:
+    if (testFeature(FEATURE_SSE3)) {
+      CPU = "k8-sse3";
+      break;
+    }
+    CPU = "k8";
+    break;
   case 16:
     CPU = "amdfam10";
-    *Type = AMDFAM10H;
+    *Type = AMDFAM10H; // "amdfam10"
     switch (Model) {
     case 2:
       *Subtype = AMDFAM10H_BARCELONA;
@@ -745,7 +781,7 @@ static const char *getAMDProcessorTypeAndSubtype(unsigned Family,
   case 25:
     CPU = "znver3";
     *Type = AMDFAM19H;
-    if ((Model <= 0x0f) || (Model >= 0x20 && Model <= 0x2f) ||
+    if (Model <= 0x0f || (Model >= 0x20 && Model <= 0x2f) ||
         (Model >= 0x30 && Model <= 0x3f) || (Model >= 0x40 && Model <= 0x4f) ||
         (Model >= 0x50 && Model <= 0x5f)) {
       // Family 19h Models 00h-0Fh (Genesis, Chagall) Zen 3
@@ -769,12 +805,32 @@ static const char *getAMDProcessorTypeAndSubtype(unsigned Family,
       break; //  "znver4"
     }
     break; // family 19h
+  case 26:
+    CPU = "znver5";
+    *Type = AMDFAM1AH;
+    if (Model <= 0x77) {
+      // Models 00h-0Fh (Breithorn).
+      // Models 10h-1Fh (Breithorn-Dense).
+      // Models 20h-2Fh (Strix 1).
+      // Models 30h-37h (Strix 2).
+      // Models 38h-3Fh (Strix 3).
+      // Models 40h-4Fh (Granite Ridge).
+      // Models 50h-5Fh (Weisshorn).
+      // Models 60h-6Fh (Krackan1).
+      // Models 70h-77h (Sarlak).
+      CPU = "znver5";
+      *Subtype = AMDFAM1AH_ZNVER5;
+      break; //  "znver5"
+    }
+    break;
   default:
     break; // Unknown AMD CPU.
   }
 
   return CPU;
 }
+
+#undef testFeature
 
 static void getAvailableFeatures(unsigned ECX, unsigned EDX, unsigned MaxLeaf,
                                  unsigned *Features) {
