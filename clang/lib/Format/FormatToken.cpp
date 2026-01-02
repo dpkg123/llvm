@@ -15,7 +15,6 @@
 #include "FormatToken.h"
 #include "ContinuationIndenter.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/Support/Debug.h"
 #include <climits>
 
 namespace clang {
@@ -45,8 +44,7 @@ bool FormatToken::isTypeName(const LangOptions &LangOpts) const {
   if (is(TT_TypeName) || Tok.isSimpleTypeSpecifier(LangOpts))
     return true;
   return (LangOpts.CXXOperatorNames || LangOpts.C11) && is(tok::identifier) &&
-         std::binary_search(CppNonKeywordTypes.begin(),
-                            CppNonKeywordTypes.end(), TokenText);
+         llvm::binary_search(CppNonKeywordTypes, TokenText);
 }
 
 bool FormatToken::isTypeOrIdentifier(const LangOptions &LangOpts) const {
@@ -55,12 +53,13 @@ bool FormatToken::isTypeOrIdentifier(const LangOptions &LangOpts) const {
 
 bool FormatToken::isBlockIndentedInitRBrace(const FormatStyle &Style) const {
   assert(is(tok::r_brace));
+  assert(MatchingParen);
+  assert(MatchingParen->is(tok::l_brace));
   if (!Style.Cpp11BracedListStyle ||
       Style.AlignAfterOpenBracket != FormatStyle::BAS_BlockIndent) {
     return false;
   }
   const auto *LBrace = MatchingParen;
-  assert(LBrace && LBrace->is(tok::l_brace));
   if (LBrace->is(BK_BracedInit))
     return true;
   if (LBrace->Previous && LBrace->Previous->is(tok::equal))

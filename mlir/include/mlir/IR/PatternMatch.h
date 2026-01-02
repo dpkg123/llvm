@@ -311,14 +311,14 @@ struct OpOrInterfaceRewritePatternBase : public RewritePattern {
 /// opposed to a raw Operation.
 template <typename SourceOp>
 struct OpRewritePattern
-    : public detail::OpOrInterfaceRewritePatternBase<SourceOp> {
+    : public mlir::detail::OpOrInterfaceRewritePatternBase<SourceOp> {
 
   /// Patterns must specify the root operation name they match against, and can
   /// also specify the benefit of the pattern matching and a list of generated
   /// ops.
   OpRewritePattern(MLIRContext *context, PatternBenefit benefit = 1,
                    ArrayRef<StringRef> generatedNames = {})
-      : detail::OpOrInterfaceRewritePatternBase<SourceOp>(
+      : mlir::detail::OpOrInterfaceRewritePatternBase<SourceOp>(
             SourceOp::getOperationName(), benefit, context, generatedNames) {}
 };
 
@@ -327,10 +327,10 @@ struct OpRewritePattern
 /// of a raw Operation.
 template <typename SourceOp>
 struct OpInterfaceRewritePattern
-    : public detail::OpOrInterfaceRewritePatternBase<SourceOp> {
+    : public mlir::detail::OpOrInterfaceRewritePatternBase<SourceOp> {
 
   OpInterfaceRewritePattern(MLIRContext *context, PatternBenefit benefit = 1)
-      : detail::OpOrInterfaceRewritePatternBase<SourceOp>(
+      : mlir::detail::OpOrInterfaceRewritePatternBase<SourceOp>(
             Pattern::MatchInterfaceOpTypeTag(), SourceOp::getInterfaceID(),
             benefit, context) {}
 };
@@ -520,7 +520,7 @@ public:
   /// unreachable operations.
   virtual void inlineBlockBefore(Block *source, Block *dest,
                                  Block::iterator before,
-                                 ValueRange argValues = std::nullopt);
+                                 ValueRange argValues = {});
 
   /// Inline the operations of block 'source' before the operation 'op'. The
   /// source block will be deleted and must have no uses. 'argValues' is used to
@@ -529,7 +529,7 @@ public:
   /// The source block must have no successors. Otherwise, the resulting IR
   /// would have unreachable operations.
   void inlineBlockBefore(Block *source, Operation *op,
-                         ValueRange argValues = std::nullopt);
+                         ValueRange argValues = {});
 
   /// Inline the operations of block 'source' into the end of block 'dest'. The
   /// source block will be deleted and must have no uses. 'argValues' is used to
@@ -537,8 +537,7 @@ public:
   ///
   /// The dest block must have no successors. Otherwise, the resulting IR would
   /// have unreachable operation.
-  void mergeBlocks(Block *source, Block *dest,
-                   ValueRange argValues = std::nullopt);
+  void mergeBlocks(Block *source, Block *dest, ValueRange argValues = {});
 
   /// Split the operations starting at "before" (inclusive) out of the given
   /// block into a new block, and return it.
@@ -811,8 +810,7 @@ public:
   RewritePatternSet &add(ConstructorArg &&arg, ConstructorArgs &&...args) {
     // The following expands a call to emplace_back for each of the pattern
     // types 'Ts'.
-    (addImpl<Ts>(/*debugLabels=*/std::nullopt,
-                 std::forward<ConstructorArg>(arg),
+    (addImpl<Ts>(/*debugLabels=*/{}, std::forward<ConstructorArg>(arg),
                  std::forward<ConstructorArgs>(args)...),
      ...);
     return *this;
@@ -895,7 +893,7 @@ public:
   RewritePatternSet &insert(ConstructorArg &&arg, ConstructorArgs &&...args) {
     // The following expands a call to emplace_back for each of the pattern
     // types 'Ts'.
-    (addImpl<Ts>(/*debugLabels=*/std::nullopt, arg, args...), ...);
+    (addImpl<Ts>(/*debugLabels=*/{}, arg, args...), ...);
     return *this;
   }
 

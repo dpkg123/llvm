@@ -113,8 +113,7 @@ RValue CodeGenFunction::EmitCXXDestructorCall(
   if (SrcAS != DstAS) {
     QualType DstTy = DtorDecl->getThisType();
     llvm::Type *NewType = CGM.getTypes().ConvertType(DstTy);
-    This = getTargetHooks().performAddrSpaceCast(*this, This, SrcAS, DstAS,
-                                                 NewType);
+    This = getTargetHooks().performAddrSpaceCast(*this, This, SrcAS, NewType);
   }
 
   CallArgList Args;
@@ -1447,8 +1446,6 @@ namespace {
     unsigned NumPlacementArgs : 30;
     LLVM_PREFERRED_TYPE(AlignedAllocationMode)
     unsigned PassAlignmentToPlacementDelete : 1;
-    LLVM_PREFERRED_TYPE(TypeAwareAllocationMode)
-    unsigned PassTypeToPlacementDelete : 1;
     const FunctionDecl *OperatorDelete;
     RValueTy TypeIdentity;
     ValueTy Ptr;
@@ -2231,8 +2228,7 @@ llvm::Value *CodeGenFunction::EmitCXXTypeidExpr(const CXXTypeidExpr *E) {
   auto MaybeASCast = [=](auto &&TypeInfo) {
     if (GlobAS == LangAS::Default)
       return TypeInfo;
-    return getTargetHooks().performAddrSpaceCast(CGM,TypeInfo, GlobAS,
-                                                 LangAS::Default, PtrTy);
+    return getTargetHooks().performAddrSpaceCast(CGM, TypeInfo, GlobAS, PtrTy);
   };
 
   if (E->isTypeOperand()) {
@@ -2317,7 +2313,8 @@ llvm::Value *CodeGenFunction::EmitDynamicCast(Address ThisAddr,
   bool IsExact = !IsDynamicCastToVoid &&
                  CGM.getCodeGenOpts().OptimizationLevel > 0 &&
                  DestRecordTy->getAsCXXRecordDecl()->isEffectivelyFinal() &&
-                 CGM.getCXXABI().shouldEmitExactDynamicCast(DestRecordTy);
+                 CGM.getCXXABI().shouldEmitExactDynamicCast(DestRecordTy) &&
+                 !getLangOpts().PointerAuthCalls;
 
   // C++ [expr.dynamic.cast]p4:
   //   If the value of v is a null pointer value in the pointer case, the result

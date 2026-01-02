@@ -3589,7 +3589,6 @@ ObjCMethodDecl *SemaObjC::LookupMethodInGlobalPool(Selector Sel, SourceRange R,
 
   // Gather the non-hidden methods.
   ObjCMethodList &MethList = instance ? Pos->second.first : Pos->second.second;
-  SmallVector<ObjCMethodDecl *, 4> Methods;
   for (ObjCMethodList *M = &MethList; M; M = M->getNext()) {
     if (M->getMethod() && M->getMethod()->isUnconditionallyVisible())
       return M->getMethod();
@@ -5586,6 +5585,14 @@ Decl *SemaObjC::ActOnIvar(Scope *S, SourceLocation DeclStart, Declarator &D,
 
   TypeSourceInfo *TInfo = SemaRef.GetTypeForDeclarator(D);
   QualType T = TInfo->getType();
+  ASTContext &Context = getASTContext();
+  if (Context.getLangOpts().PointerAuthObjcInterfaceSel &&
+      !T.getPointerAuth()) {
+    if (Context.isObjCSelType(T.getUnqualifiedType())) {
+      if (auto PAQ = Context.getObjCMemberSelTypePtrAuth())
+        T = Context.getPointerAuthType(T, PAQ);
+    }
+  }
 
   if (BitWidth) {
     // 6.7.2.1p3, 6.7.2.1p4

@@ -261,7 +261,6 @@
 ///
 ///===----------------------------------------------------------------------===//
 
-#include "MCTargetDesc/WebAssemblyMCTargetDesc.h"
 #include "WebAssembly.h"
 #include "WebAssemblyTargetMachine.h"
 #include "llvm/ADT/StringExtras.h"
@@ -1707,7 +1706,6 @@ void WebAssemblyLowerEmscriptenEHSjLj::handleLongjmpableCallsForWasmSjLj(
     // BB. If the call is enclosed in another catchpad/cleanuppad scope, unwind
     // to its parent pad's unwind destination instead to preserve the scope
     // structure. It will eventually unwind to the catch.dispatch.longjmp.
-    SmallVector<OperandBundleDef, 1> Bundles;
     BasicBlock *UnwindDest = nullptr;
     if (auto Bundle = CI->getOperandBundle(LLVMContext::OB_funclet)) {
       Instruction *FromPad = cast<Instruction>(Bundle->Inputs[0]);

@@ -18,8 +18,6 @@
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "llvm/BinaryFormat/Dwarf.h"
-#include "llvm/IR/DebugInfoMetadata.h"
-#include <optional>
 
 using namespace mlir;
 using namespace mlir::LLVM;
@@ -387,6 +385,13 @@ ModuleFlagAttr::verify(function_ref<InFlightDiagnostic()> emitError,
         })))
       return emitError()
              << "'CG Profile' key expects an array of '#llvm.cgprofile_entry'";
+    return success();
+  }
+
+  if (key == LLVMDialect::getModuleFlagKeyProfileSummaryName()) {
+    if (!isa<ModuleFlagProfileSummaryAttr>(value))
+      return emitError() << "'ProfileSummary' key expects a "
+                            "'#llvm.profile_summary' attribute";
     return success();
   }
 

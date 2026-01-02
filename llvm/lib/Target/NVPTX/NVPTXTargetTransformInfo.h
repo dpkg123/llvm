@@ -26,7 +26,7 @@
 
 namespace llvm {
 
-class NVPTXTTIImpl : public BasicTTIImplBase<NVPTXTTIImpl> {
+class NVPTXTTIImpl final : public BasicTTIImplBase<NVPTXTTIImpl> {
   typedef BasicTTIImplBase<NVPTXTTIImpl> BaseT;
   typedef TargetTransformInfo TTI;
   friend BaseT;
@@ -129,8 +129,9 @@ public:
         Insert = false;
       }
     }
-    if (Insert && Isv2x16VT(VT)) {
-      // Can be built in a single mov
+    if (Insert && NVPTX::isPackedVectorTy(VT) && VT.is32BitVector()) {
+      // Can be built in a single 32-bit mov (64-bit regs are emulated in SASS
+      // with 2x 32-bit regs)
       Cost += 1;
       Insert = false;
     }
@@ -173,6 +174,8 @@ public:
   bool collectFlatAddressOperands(SmallVectorImpl<int> &OpIndexes,
                                   Intrinsic::ID IID) const override;
 
+  unsigned getLoadStoreVecRegBitWidth(unsigned AddrSpace) const override;
+
   Value *rewriteIntrinsicWithAddressSpace(IntrinsicInst *II, Value *OldV,
                                           Value *NewV) const override;
   unsigned getAssumedAddrSpace(const Value *V) const override;
@@ -180,6 +183,11 @@ public:
   void collectKernelLaunchBounds(
       const Function &F,
       SmallVectorImpl<std::pair<StringRef, int64_t>> &LB) const override;
+
+  bool shouldBuildRelLookupTables() const override {
+    // Self-referential globals are not supported.
+    return false;
+  }
 };
 
 } // end namespace llvm

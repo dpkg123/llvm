@@ -604,7 +604,7 @@ def FCmpPredicate : LLVM_EnumAttr<
 def ICmpPredicate : LLVM_EnumAttr<
     "ICmpPredicate",
     "::llvm::CmpInst::Predicate",
-    "lvm.icmp comparison predicate",
+    "llvm.icmp comparison predicate",
     [ICmpPredicateEQ, ICmpPredicateNE, ICmpPredicateSLT, ICmpPredicateSLE,
      ICmpPredicateSGT, ICmpPredicateSGE, ICmpPredicateULT, ICmpPredicateULE,
      ICmpPredicateUGT, ICmpPredicateUGE],
@@ -826,7 +826,7 @@ def FPExceptionBehaviorAttr : LLVM_EnumAttr<
 }
 
 //===----------------------------------------------------------------------===//
-// Module Flag Behavior
+// Module Flags
 //===----------------------------------------------------------------------===//
 
 // These values must match llvm::Module::ModFlagBehavior ones.
@@ -855,6 +855,21 @@ def ModFlagBehaviorAttr : LLVM_EnumAttr<
     [ModFlagBehaviorError, ModFlagBehaviorWarning, ModFlagBehaviorRequire,
      ModFlagBehaviorOverride, ModFlagBehaviorAppend,
      ModFlagBehaviorAppendUnique, ModFlagBehaviorMax, ModFlagBehaviorMin]> {
+  let cppNamespace = "::mlir::LLVM";
+}
+
+def LLVM_ProfileSummaryFormatSampleProfile : I64EnumAttrCase<"SampleProfile",
+                                                             0>;
+def LLVM_ProfileSummaryFormatInstrProf : I64EnumAttrCase<"InstrProf", 1>;
+def LLVM_ProfileSummaryFormatCSInstrProf : I64EnumAttrCase<"CSInstrProf", 2>;
+
+def LLVM_ProfileSummaryFormatKind : I64EnumAttr<
+    "ProfileSummaryFormatKind",
+    "LLVM ProfileSummary format kinds", [
+      LLVM_ProfileSummaryFormatSampleProfile,
+      LLVM_ProfileSummaryFormatInstrProf,
+      LLVM_ProfileSummaryFormatCSInstrProf,
+    ]> {
   let cppNamespace = "::mlir::LLVM";
 }
 

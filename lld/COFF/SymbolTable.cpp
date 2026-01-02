@@ -245,6 +245,7 @@ void SymbolTable::reportUndefinedSymbol(const UndefinedDiag &undefDiag) {
 }
 
 void SymbolTable::loadMinGWSymbols() {
+  std::vector<Symbol *> undefs;
   for (auto &i : symMap) {
     Symbol *sym = i.second;
     auto *undef = dyn_cast<Undefined>(sym);
@@ -252,7 +253,15 @@ void SymbolTable::loadMinGWSymbols() {
       continue;
     if (undef->getWeakAlias())
       continue;
+    undefs.push_back(sym);
+  }
 
+  for (auto sym : undefs) {
+    auto *undef = dyn_cast<Undefined>(sym);
+    if (!undef)
+      continue;
+    if (undef->getWeakAlias())
+      continue;
     StringRef name = undef->getName();
 
     if (machine == I386 && ctx.config.stdcallFixup) {
@@ -551,7 +560,7 @@ void SymbolTable::initializeLoadConfig() {
       Warn(ctx) << "EC version of '_load_config_used' is missing";
       return;
     }
-    if (ctx.hybridSymtab) {
+    if (ctx.config.machine == ARM64X) {
       Warn(ctx) << "native version of '_load_config_used' is missing for "
                    "ARM64X target";
       return;
@@ -771,7 +780,7 @@ void SymbolTable::addLazyDLLSymbol(DLLFile *f, DLLFile::Symbol *sym,
     return;
   }
   auto *u = dyn_cast<Undefined>(s);
-  if (!u || u->weakAlias || s->pendingArchiveLoad)
+  if (!u || (u->weakAlias && !u->isECAlias(machine)) || s->pendingArchiveLoad)
     return;
   s->pendingArchiveLoad = true;
   f->makeImport(sym);
@@ -1333,6 +1342,44 @@ void SymbolTable::parseAlternateName(StringRef s) {
   if (it != alternateNames.end() && it->second != to)
     Fatal(ctx) << "/alternatename: conflicts: " << s;
   alternateNames.insert(it, std::make_pair(from, to));
+}
+
+void SymbolTable::resolveAlternateNames() {
+  // Add weak aliases. Weak aliases is a mechanism to give remaining
+  // undefined symbols final chance to be resolved successfully.
+  for (auto pair : alternateNames) {
+    StringRef from = pair.first;
+    StringRef to = pair.second;
+    Symbol *sym = find(from);
+    if (!sym)
+      continue;
+    if (auto *u = dyn_cast<Undefined>(sym)) {
+      if (u->weakAlias) {
+        // On ARM64EC, anti-dependency aliases are treated as undefined
+        // symbols unless a demangled symbol aliases a defined one, which
+        // is part of the implementation.
+        if (!isEC() || !u->isAntiDep)
+          continue;
+        if (!isa<Undefined>(u->weakAlias) &&
+            !isArm64ECMangledFunctionName(u->getName()))
+          continue;
+      }
+
+      // Check if the destination symbol is defined. If not, skip it.
+      // It may still be resolved later if more input files are added.
+      // Also skip anti-dependency targets, as they can't be chained anyway.
+      Symbol *toSym = find(to);
+      if (!toSym)
+        continue;
+      auto toUndef = dyn_cast<Undefined>(toSym);
+      if (toUndef && (!toUndef->weakAlias || toUndef->isAntiDep))
+        continue;
+      toSym->isUsedInRegularObj = true;
+      if (toSym->isLazy())
+        forceLazy(toSym);
+      u->setWeakAlias(toSym);
+    }
+  }
 }
 
 // Parses /aligncomm option argument.
