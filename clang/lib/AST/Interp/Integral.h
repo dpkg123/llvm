@@ -128,7 +128,9 @@ public:
   }
 
   unsigned countLeadingZeros() const {
-    return llvm::countLeadingZeros<ReprT>(V);
+    if constexpr (!Signed)
+      return llvm::countl_zero<ReprT>(V);
+    llvm_unreachable("Don't call countLeadingZeros() on signed types.");
   }
 
   Integral truncate(unsigned TruncBits) const {
@@ -225,6 +227,9 @@ public:
   }
 
   static bool neg(Integral A, Integral *R) {
+    if (Signed && A.isMin())
+      return true;
+
     *R = -A;
     return false;
   }
@@ -232,6 +237,18 @@ public:
   static bool comp(Integral A, Integral *R) {
     *R = Integral(~A.V);
     return false;
+  }
+
+  template <unsigned RHSBits, bool RHSSign>
+  static void shiftLeft(const Integral A, const Integral<RHSBits, RHSSign> B,
+                        unsigned OpBits, Integral *R) {
+    *R = Integral::from(A.V << B.V, OpBits);
+  }
+
+  template <unsigned RHSBits, bool RHSSign>
+  static void shiftRight(const Integral A, const Integral<RHSBits, RHSSign> B,
+                         unsigned OpBits, Integral *R) {
+    *R = Integral::from(A.V >> B.V, OpBits);
   }
 
 private:
