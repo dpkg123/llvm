@@ -19,6 +19,7 @@ add_llvm_component_library(LLVMPasses
   Analysis
   CFGuard
   CodeGen
+  GlobalISel
   Core
   Coroutines
   HipStdPar
@@ -32,4 +33,5 @@ add_llvm_component_library(LLVMPasses
   TransformUtils
   Vectorize
   Instrumentation
+  Obfuscation
   )

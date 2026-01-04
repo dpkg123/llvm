@@ -161,11 +161,36 @@ public:
   mlir::Value VisitArraySubscriptExpr(ArraySubscriptExpr *e) {
     if (e->getBase()->getType()->isVectorType()) {
       assert(!cir::MissingFeatures::scalableVectors());
-      cgf.getCIRGenModule().errorNYI("VisitArraySubscriptExpr: VectorType");
-      return {};
+
+      const mlir::Location loc = cgf.getLoc(e->getSourceRange());
+      const mlir::Value vecValue = Visit(e->getBase());
+      const mlir::Value indexValue = Visit(e->getIdx());
+      return cgf.builder.create<cir::VecExtractOp>(loc, vecValue, indexValue);
     }
     // Just load the lvalue formed by the subscript expression.
     return emitLoadOfLValue(e);
+  }
+
+  mlir::Value VisitShuffleVectorExpr(ShuffleVectorExpr *e) {
+    if (e->getNumSubExprs() == 2) {
+      // The undocumented form of __builtin_shufflevector.
+      mlir::Value inputVec = Visit(e->getExpr(0));
+      mlir::Value indexVec = Visit(e->getExpr(1));
+      return cgf.builder.create<cir::VecShuffleDynamicOp>(
+          cgf.getLoc(e->getSourceRange()), inputVec, indexVec);
+    }
+
+    cgf.getCIRGenModule().errorNYI(e->getSourceRange(),
+                                   "ShuffleVectorExpr with indices");
+    return {};
+  }
+
+  mlir::Value VisitConvertVectorExpr(ConvertVectorExpr *e) {
+    // __builtin_convertvector is an element-wise cast, and is implemented as a
+    // regular cast. The back end handles casts of vectors correctly.
+    return emitScalarConversion(Visit(e->getSrcExpr()),
+                                e->getSrcExpr()->getType(), e->getType(),
+                                e->getSourceRange().getBegin());
   }
 
   mlir::Value VisitMemberExpr(MemberExpr *e);
@@ -260,7 +285,12 @@ public:
            "Obsolete code. Don't use mlir::IntegerType with CIR.");
 
     mlir::Type fullDstTy = dstTy;
-    assert(!cir::MissingFeatures::vectorType());
+    if (mlir::isa<cir::VectorType>(srcTy) &&
+        mlir::isa<cir::VectorType>(dstTy)) {
+      // Use the element types of the vectors to figure out the CastKind.
+      srcTy = mlir::dyn_cast<cir::VectorType>(srcTy).getElementType();
+      dstTy = mlir::dyn_cast<cir::VectorType>(dstTy).getElementType();
+    }
 
     std::optional<cir::CastKind> castKind;
 
@@ -539,6 +569,8 @@ public:
 
   mlir::Value VisitUnaryLNot(const UnaryOperator *e);
 
+  mlir::Value VisitCXXThisExpr(CXXThisExpr *te) { return cgf.loadCXXThis(); }
+
   /// Emit a conversion from the specified type to the specified destination
   /// type, both of which are CIR scalar types.
   /// TODO: do we need ScalarConversionOpts here? Should be done in another
@@ -783,12 +815,12 @@ public:
       }
     };
 
+    cir::CmpOpKind kind = clangCmpToCIRCmp(e->getOpcode());
     if (lhsTy->getAs<MemberPointerType>()) {
       assert(!cir::MissingFeatures::dataMemberType());
       assert(e->getOpcode() == BO_EQ || e->getOpcode() == BO_NE);
       mlir::Value lhs = cgf.emitScalarExpr(e->getLHS());
       mlir::Value rhs = cgf.emitScalarExpr(e->getRHS());
-      cir::CmpOpKind kind = clangCmpToCIRCmp(e->getOpcode());
       result = builder.createCompare(loc, kind, lhs, rhs);
     } else if (!lhsTy->isAnyComplexType() && !rhsTy->isAnyComplexType()) {
       BinOpInfo boInfo = emitBinOps(e);
@@ -796,9 +828,17 @@ public:
       mlir::Value rhs = boInfo.rhs;
 
       if (lhsTy->isVectorType()) {
-        assert(!cir::MissingFeatures::vectorType());
-        cgf.cgm.errorNYI(loc, "vector comparisons");
-        result = builder.getBool(false, loc);
+        if (!e->getType()->isVectorType()) {
+          // If AltiVec, the comparison results in a numeric type, so we use
+          // intrinsics comparing vectors and giving 0 or 1 as a result
+          cgf.cgm.errorNYI(loc, "AltiVec comparison");
+        } else {
+          // Other kinds of vectors. Element-wise comparison returning
+          // a vector.
+          result = builder.create<cir::VecCmpOp>(
+              cgf.getLoc(boInfo.loc), cgf.convertType(boInfo.fullType), kind,
+              boInfo.lhs, boInfo.rhs);
+        }
       } else if (boInfo.isFixedPointOp()) {
         assert(!cir::MissingFeatures::fixedPointType());
         cgf.cgm.errorNYI(loc, "fixed point comparisons");
@@ -1273,7 +1313,7 @@ mlir::Value ScalarExprEmitter::emitMul(const BinOpInfo &ops) {
       !canElideOverflowCheck(cgf.getContext(), ops))
     cgf.cgm.errorNYI("unsigned int overflow sanitizer");
 
-  if (cir::isFPOrFPVectorTy(ops.lhs.getType())) {
+  if (cir::isFPOrVectorOfFPType(ops.lhs.getType())) {
     assert(!cir::MissingFeatures::cgFPOptionsRAII());
     return builder.createFMul(loc, ops.lhs, ops.rhs);
   }
@@ -1332,7 +1372,7 @@ mlir::Value ScalarExprEmitter::emitAdd(const BinOpInfo &ops) {
       !canElideOverflowCheck(cgf.getContext(), ops))
     cgf.cgm.errorNYI("unsigned int overflow sanitizer");
 
-  if (cir::isFPOrFPVectorTy(ops.lhs.getType())) {
+  if (cir::isFPOrVectorOfFPType(ops.lhs.getType())) {
     assert(!cir::MissingFeatures::cgFPOptionsRAII());
     return builder.createFAdd(loc, ops.lhs, ops.rhs);
   }
@@ -1380,7 +1420,7 @@ mlir::Value ScalarExprEmitter::emitSub(const BinOpInfo &ops) {
         !canElideOverflowCheck(cgf.getContext(), ops))
       cgf.cgm.errorNYI("unsigned int overflow sanitizer");
 
-    if (cir::isFPOrFPVectorTy(ops.lhs.getType())) {
+    if (cir::isFPOrVectorOfFPType(ops.lhs.getType())) {
       assert(!cir::MissingFeatures::cgFPOptionsRAII());
       return builder.createFSub(loc, ops.lhs, ops.rhs);
     }
@@ -1684,11 +1724,6 @@ mlir::Value ScalarExprEmitter::VisitInitListExpr(InitListExpr *e) {
     return {};
   }
 
-  if (numInitElements == 0) {
-    cgf.cgm.errorNYI(e->getSourceRange(), "InitListExpr with 0 init elements");
-    return {};
-  }
-
   if (e->getType()->isVectorType()) {
     const auto vectorType =
         mlir::cast<cir::VectorType>(cgf.convertType(e->getType()));
@@ -1708,6 +1743,12 @@ mlir::Value ScalarExprEmitter::VisitInitListExpr(InitListExpr *e) {
 
     return cgf.getBuilder().create<cir::VecCreateOp>(
         cgf.getLoc(e->getSourceRange()), vectorType, elements);
+  }
+
+  if (numInitElements == 0) {
+    cgf.cgm.errorNYI(e->getSourceRange(),
+                     "InitListExpr Non VectorType with 0 init elements");
+    return {};
   }
 
   return Visit(e->getInit(0));

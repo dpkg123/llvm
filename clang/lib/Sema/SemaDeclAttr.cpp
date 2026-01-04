@@ -53,12 +53,12 @@
 #include "clang/Sema/SemaOpenCL.h"
 #include "clang/Sema/SemaOpenMP.h"
 #include "clang/Sema/SemaRISCV.h"
+#include "clang/Sema/SemaSPIRV.h"
 #include "clang/Sema/SemaSYCL.h"
 #include "clang/Sema/SemaSwift.h"
 #include "clang/Sema/SemaWasm.h"
 #include "clang/Sema/SemaX86.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/STLForwardCompat.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Demangle/Demangle.h"
 #include "llvm/IR/DerivedTypes.h"
@@ -851,7 +851,6 @@ static void handleDiagnoseIfAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
   }
 
   StringRef WarningGroup;
-  SmallVector<StringRef, 2> Options;
   if (AL.getNumArgs() > 3) {
     if (!S.checkStringLiteralArgumentAttr(AL, 3, WarningGroup))
       return;
@@ -3496,13 +3495,7 @@ static void handleTargetClonesAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
   if (HasCommas && AL.getNumArgs() > 1)
     S.Diag(AL.getLoc(), diag::warn_target_clone_mixed_values);
 
-  if (S.Context.getTargetInfo().getTriple().isAArch64() && !HasDefault) {
-    // Add default attribute if there is no one
-    HasDefault = true;
-    Strings.push_back("default");
-  }
-
-  if (!HasDefault) {
+  if (!HasDefault && !S.Context.getTargetInfo().getTriple().isAArch64()) {
     S.Diag(AL.getLoc(), diag::err_target_clone_must_have_default);
     return;
   }
@@ -3621,7 +3614,9 @@ static void handleCleanupAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
     return;
   }
 
-  D->addAttr(::new (S.Context) CleanupAttr(S.Context, AL, FD));
+  auto *attr = ::new (S.Context) CleanupAttr(S.Context, AL, FD);
+  attr->setArgLoc(E->getExprLoc());
+  D->addAttr(attr);
 }
 
 static void handleEnumExtensibilityAttr(Sema &S, Decl *D,
@@ -3983,7 +3978,6 @@ static void handleFormatMatchesAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
 
   S.Diag(AL.getLoc(), diag::err_format_nonliteral)
       << FormatStrExpr->getSourceRange();
-  return;
 }
 
 /// Handle __attribute__((callback(CalleeIdx, PayloadIdx0, ...))) attributes.
@@ -4155,7 +4149,7 @@ LifetimeCaptureByAttr *Sema::ParseLifetimeCaptureByAttr(const ParsedAttr &AL,
   }
   if (!IsValid)
     return nullptr;
-  SmallVector<int> FakeParamIndices(N, LifetimeCaptureByAttr::INVALID);
+  SmallVector<int> FakeParamIndices(N, LifetimeCaptureByAttr::Invalid);
   auto *CapturedBy =
       LifetimeCaptureByAttr::Create(Context, FakeParamIndices.data(), N, AL);
   CapturedBy->setArgs(ParamIdents, ParamLocs);
@@ -4198,8 +4192,8 @@ void Sema::LazyProcessLifetimeCaptureByParams(FunctionDecl *FD) {
   if (Attrs.empty())
     return;
   llvm::StringMap<int> NameIdxMapping = {
-      {"global", LifetimeCaptureByAttr::GLOBAL},
-      {"unknown", LifetimeCaptureByAttr::UNKNOWN}};
+      {"global", LifetimeCaptureByAttr::Global},
+      {"unknown", LifetimeCaptureByAttr::Unknown}};
   int Idx = 0;
   if (HasImplicitThisParam) {
     NameIdxMapping["this"] = 0;
@@ -5398,6 +5392,9 @@ bool Sema::CheckCallingConvAttr(const ParsedAttr &Attrs, CallingConv &CC,
     }
   }
 
+  bool IsTargetDefaultMSABI =
+      Context.getTargetInfo().getTriple().isOSWindows() ||
+      Context.getTargetInfo().getTriple().isUEFI();
   // TODO: diagnose uses of these conventions on the wrong target.
   switch (Attrs.getKind()) {
   case ParsedAttr::AT_CDecl:
@@ -5437,12 +5434,10 @@ bool Sema::CheckCallingConvAttr(const ParsedAttr &Attrs, CallingConv &CC,
     CC = CC_X86RegCall;
     break;
   case ParsedAttr::AT_MSABI:
-    CC = Context.getTargetInfo().getTriple().isOSWindows() ? CC_C :
-                                                             CC_Win64;
+    CC = IsTargetDefaultMSABI ? CC_C : CC_Win64;
     break;
   case ParsedAttr::AT_SysVABI:
-    CC = Context.getTargetInfo().getTriple().isOSWindows() ? CC_X86_64SysV :
-                                                             CC_C;
+    CC = IsTargetDefaultMSABI ? CC_X86_64SysV : CC_C;
     break;
   case ParsedAttr::AT_Pcs: {
     StringRef StrRef;
@@ -5852,12 +5847,13 @@ static void handleBuiltinAliasAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
   bool IsAArch64 = S.Context.getTargetInfo().getTriple().isAArch64();
   bool IsARM = S.Context.getTargetInfo().getTriple().isARM();
   bool IsRISCV = S.Context.getTargetInfo().getTriple().isRISCV();
+  bool IsSPIRV = S.Context.getTargetInfo().getTriple().isSPIRV();
   bool IsHLSL = S.Context.getLangOpts().HLSL;
   if ((IsAArch64 && !S.ARM().SveAliasValid(BuiltinID, AliasName)) ||
       (IsARM && !S.ARM().MveAliasValid(BuiltinID, AliasName) &&
        !S.ARM().CdeAliasValid(BuiltinID, AliasName)) ||
       (IsRISCV && !S.RISCV().isAliasValid(BuiltinID, AliasName)) ||
-      (!IsAArch64 && !IsARM && !IsRISCV && !IsHLSL)) {
+      (!IsAArch64 && !IsARM && !IsRISCV && !IsHLSL && !IsSPIRV)) {
     S.Diag(AL.getLoc(), diag::err_attribute_builtin_alias) << AL;
     return;
   }
@@ -6241,6 +6237,21 @@ static void handleCapabilityAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
     return;
 
   D->addAttr(::new (S.Context) CapabilityAttr(S.Context, AL, N));
+}
+
+static void handleReentrantCapabilityAttr(Sema &S, Decl *D,
+                                          const ParsedAttr &AL) {
+  // Do not permit 'reentrant_capability' without 'capability(..)'. Note that
+  // the check here requires 'capability' to be before 'reentrant_capability'.
+  // This helps enforce a canonical style. Also avoids placing an additional
+  // branch into ProcessDeclAttributeList().
+  if (!D->hasAttr<CapabilityAttr>()) {
+    S.Diag(AL.getLoc(), diag::warn_thread_attribute_requires_preceded)
+        << AL << cast<NamedDecl>(D) << "'capability'";
+    return;
+  }
+
+  D->addAttr(::new (S.Context) ReentrantCapabilityAttr(S.Context, AL));
 }
 
 static void handleAssertCapabilityAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
@@ -6862,13 +6873,14 @@ ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D, const ParsedAttr &AL,
   // though they were unknown attributes.
   if (AL.getKind() == ParsedAttr::UnknownAttribute ||
       !AL.existsInTarget(S.Context.getTargetInfo())) {
-    S.Diag(AL.getLoc(),
-           AL.isRegularKeywordAttribute()
-               ? (unsigned)diag::err_keyword_not_supported_on_target
-           : AL.isDeclspecAttribute()
-               ? (unsigned)diag::warn_unhandled_ms_attribute_ignored
-               : (unsigned)diag::warn_unknown_attribute_ignored)
-        << AL << AL.getRange();
+    if (AL.isRegularKeywordAttribute() || AL.isDeclspecAttribute()) {
+      S.Diag(AL.getLoc(), AL.isRegularKeywordAttribute()
+                              ? diag::err_keyword_not_supported_on_target
+                              : diag::warn_unhandled_ms_attribute_ignored)
+          << AL.getAttrName() << AL.getRange();
+    } else {
+      S.DiagnoseUnknownAttribute(AL);
+    }
     return;
   }
 
@@ -7478,6 +7490,9 @@ ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D, const ParsedAttr &AL,
     break;
 
   // HLSL attributes:
+  case ParsedAttr::AT_RootSignature:
+    S.HLSL().handleRootSignatureAttr(D, AL);
+    break;
   case ParsedAttr::AT_HLSLNumThreads:
     S.HLSL().handleNumThreadsAttr(D, AL);
     break;
@@ -7552,6 +7567,9 @@ ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D, const ParsedAttr &AL,
   case ParsedAttr::AT_Capability:
   case ParsedAttr::AT_Lockable:
     handleCapabilityAttr(S, D, AL);
+    break;
+  case ParsedAttr::AT_ReentrantCapability:
+    handleReentrantCapabilityAttr(S, D, AL);
     break;
   case ParsedAttr::AT_RequiresCapability:
     handleRequiresCapabilityAttr(S, D, AL);
@@ -7858,6 +7876,20 @@ void Sema::checkUnusedDeclAttributes(Declarator &D) {
   ::checkUnusedDeclAttributes(*this, D.getAttributes());
   for (unsigned i = 0, e = D.getNumTypeObjects(); i != e; ++i)
     ::checkUnusedDeclAttributes(*this, D.getTypeObject(i).getAttrs());
+}
+
+void Sema::DiagnoseUnknownAttribute(const ParsedAttr &AL) {
+  std::string NormalizedFullName = '\'' + AL.getNormalizedFullName() + '\'';
+  if (auto CorrectedFullName =
+          AL.getCorrectedFullName(Context.getTargetInfo(), getLangOpts())) {
+    Diag(AL.getNormalizedRange().getBegin(),
+         diag::warn_unknown_attribute_ignored_suggestion)
+        << NormalizedFullName << *CorrectedFullName << AL.getNormalizedRange();
+  } else {
+    Diag(AL.getNormalizedRange().getBegin(),
+         diag::warn_unknown_attribute_ignored)
+        << NormalizedFullName << AL.getNormalizedRange();
+  }
 }
 
 NamedDecl *Sema::DeclClonePragmaWeak(NamedDecl *ND, const IdentifierInfo *II,

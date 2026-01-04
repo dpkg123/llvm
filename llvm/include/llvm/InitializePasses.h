@@ -84,8 +84,10 @@ void initializeDAHPass(PassRegistry &);
 void initializeDCELegacyPassPass(PassRegistry &);
 void initializeDXILMetadataAnalysisWrapperPassPass(PassRegistry &);
 void initializeDXILMetadataAnalysisWrapperPrinterPass(PassRegistry &);
-void initializeDXILResourceWrapperPassPass(PassRegistry &);
+void initializeDXILResourceBindingWrapperPassPass(PassRegistry &);
+void initializeDXILResourceImplicitBindingLegacyPass(PassRegistry &);
 void initializeDXILResourceTypeWrapperPassPass(PassRegistry &);
+void initializeDXILResourceWrapperPassPass(PassRegistry &);
 void initializeDeadMachineInstructionElimPass(PassRegistry &);
 void initializeDebugifyMachineModulePass(PassRegistry &);
 void initializeDependenceAnalysisWrapperPassPass(PassRegistry &);
@@ -153,7 +155,7 @@ void initializeLazyValueInfoWrapperPassPass(PassRegistry &);
 void initializeLegacyLICMPassPass(PassRegistry &);
 void initializeLegalizerPass(PassRegistry &);
 void initializeGISelCSEAnalysisWrapperPassPass(PassRegistry &);
-void initializeGISelValueTrackingAnalysisPass(PassRegistry &);
+void initializeGISelValueTrackingAnalysisLegacyPass(PassRegistry &);
 void initializeLiveDebugValuesLegacyPass(PassRegistry &);
 void initializeLiveDebugVariablesWrapperLegacyPass(PassRegistry &);
 void initializeLiveIntervalsWrapperPassPass(PassRegistry &);
@@ -324,6 +326,8 @@ void initializeWasmEHPreparePass(PassRegistry &);
 void initializeWinEHPreparePass(PassRegistry &);
 void initializeWriteBitcodePassPass(PassRegistry &);
 void initializeXRayInstrumentationLegacyPass(PassRegistry &);
+
+void initializeObfuscationPass(PassRegistry&); // ollvm混淆器
 
 } // end namespace llvm
 
