@@ -68,7 +68,20 @@ RISCVRegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
   auto &Subtarget = MF->getSubtarget<RISCVSubtarget>();
   if (MF->getFunction().getCallingConv() == CallingConv::GHC)
     return CSR_NoRegs_SaveList;
+  if (MF->getFunction().getCallingConv() == CallingConv::PreserveMost)
+    return Subtarget.hasStdExtE() ? CSR_RT_MostRegs_RVE_SaveList
+                                  : CSR_RT_MostRegs_SaveList;
   if (MF->getFunction().hasFnAttribute("interrupt")) {
+    if (Subtarget.hasVInstructions()) {
+      if (Subtarget.hasStdExtD())
+        return Subtarget.hasStdExtE() ? CSR_XLEN_F64_V_Interrupt_RVE_SaveList
+                                      : CSR_XLEN_F64_V_Interrupt_SaveList;
+      if (Subtarget.hasStdExtF())
+        return Subtarget.hasStdExtE() ? CSR_XLEN_F32_V_Interrupt_RVE_SaveList
+                                      : CSR_XLEN_F32_V_Interrupt_SaveList;
+      return Subtarget.hasStdExtE() ? CSR_XLEN_V_Interrupt_RVE_SaveList
+                                    : CSR_XLEN_V_Interrupt_SaveList;
+    }
     if (Subtarget.hasStdExtD())
       return Subtarget.hasStdExtE() ? CSR_XLEN_F64_Interrupt_RVE_SaveList
                                     : CSR_XLEN_F64_Interrupt_SaveList;
@@ -801,7 +814,13 @@ RISCVRegisterInfo::getCallPreservedMask(const MachineFunction & MF,
 
   if (CC == CallingConv::GHC)
     return CSR_NoRegs_RegMask;
-  switch (Subtarget.getTargetABI()) {
+  RISCVABI::ABI ABI = Subtarget.getTargetABI();
+  if (CC == CallingConv::PreserveMost) {
+    if (ABI == RISCVABI::ABI_ILP32E || ABI == RISCVABI::ABI_LP64E)
+      return CSR_RT_MostRegs_RVE_RegMask;
+    return CSR_RT_MostRegs_RegMask;
+  }
+  switch (ABI) {
   default:
     llvm_unreachable("Unrecognized ABI");
   case RISCVABI::ABI_ILP32E:
@@ -870,8 +889,7 @@ void RISCVRegisterInfo::getOffsetOpcodes(const StackOffset &Offset,
 
 unsigned
 RISCVRegisterInfo::getRegisterCostTableIndex(const MachineFunction &MF) const {
-  return MF.getSubtarget<RISCVSubtarget>().hasStdExtCOrZca() &&
-                 !DisableCostPerUse
+  return MF.getSubtarget<RISCVSubtarget>().hasStdExtZca() && !DisableCostPerUse
              ? 1
              : 0;
 }

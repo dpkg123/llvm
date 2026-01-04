@@ -1287,7 +1287,7 @@ uptr GetPageSize() {
 
 uptr ReadBinaryName(/*out*/ char *buf, uptr buf_len) {
 #  if SANITIZER_HAIKU
-  int cookie = 0;
+  int32_t cookie = 0;
   image_info info;
   const char *argv0 = "<UNKNOWN>";
   while (get_next_image_info(B_CURRENT_TEAM, &cookie, &info) == B_OK) {
@@ -1901,54 +1901,6 @@ int internal_uname(struct utsname *buf) {
 }
 #  endif
 
-#  if SANITIZER_ANDROID
-static int dl_iterate_phdr_test_cb(struct dl_phdr_info *info, size_t size,
-                                   void *data) {
-  // Any name starting with "lib" indicates a bug in L where library base names
-  // are returned instead of paths.
-  if (info->dlpi_name && info->dlpi_name[0] == 'l' &&
-      info->dlpi_name[1] == 'i' && info->dlpi_name[2] == 'b') {
-    *(bool *)data = true;
-    return 1;
-  }
-  return 0;
-}
-
-static atomic_uint32_t android_api_level;
-
-static AndroidApiLevel AndroidDetectApiLevelStatic() {
-#    if __ANDROID_API__ <= 22
-  return ANDROID_LOLLIPOP_MR1;
-#    else
-  return ANDROID_POST_LOLLIPOP;
-#    endif
-}
-
-static AndroidApiLevel AndroidDetectApiLevel() {
-  bool base_name_seen = false;
-  dl_iterate_phdr(dl_iterate_phdr_test_cb, &base_name_seen);
-  if (base_name_seen)
-    return ANDROID_LOLLIPOP_MR1;  // L MR1
-  return ANDROID_POST_LOLLIPOP;   // post-L
-  // Plain L (API level 21) is completely broken wrt ASan and not very
-  // interesting to detect.
-}
-
-extern "C" __attribute__((weak)) void *_DYNAMIC;
-
-AndroidApiLevel AndroidGetApiLevel() {
-  AndroidApiLevel level =
-      (AndroidApiLevel)atomic_load(&android_api_level, memory_order_relaxed);
-  if (level)
-    return level;
-  level = &_DYNAMIC == nullptr ? AndroidDetectApiLevelStatic()
-                               : AndroidDetectApiLevel();
-  atomic_store(&android_api_level, level, memory_order_relaxed);
-  return level;
-}
-
-#  endif
-
 static HandleSignalMode GetHandleSignalModeImpl(int signum) {
   switch (signum) {
     case SIGABRT:
@@ -2035,7 +1987,10 @@ SignalContext::WriteFlag SignalContext::GetWriteFlag() const {
 #    elif SANITIZER_NETBSD
   uptr err = ucontext->uc_mcontext.__gregs[_REG_ERR];
 #    elif SANITIZER_HAIKU
-  uptr err = ucontext->uc_mcontext.r13;
+  uptr err = 0;  // FIXME: ucontext->uc_mcontext.r13;
+                 // The err register was added on the main branch and not
+                 // available with the current release. To be reverted later.
+                 // https://github.com/haiku/haiku/commit/11adda21aa4e6b24f71a496868a44d7607bc3764
 #    elif SANITIZER_SOLARIS && defined(__i386__)
   const int Err = 13;
   uptr err = ucontext->uc_mcontext.gregs[Err];
@@ -2665,6 +2620,11 @@ static void GetPcSpBp(void *context, uptr *pc, uptr *sp, uptr *bp) {
   *pc = ucontext->uc_mcontext.mc_eip;
   *bp = ucontext->uc_mcontext.mc_ebp;
   *sp = ucontext->uc_mcontext.mc_esp;
+#    elif SANITIZER_HAIKU
+  ucontext_t *ucontext = (ucontext_t *)context;
+  *pc = ucontext->uc_mcontext.eip;
+  *bp = ucontext->uc_mcontext.ebp;
+  *sp = ucontext->uc_mcontext.esp;
 #    else
   ucontext_t *ucontext = (ucontext_t *)context;
 #      if SANITIZER_SOLARIS

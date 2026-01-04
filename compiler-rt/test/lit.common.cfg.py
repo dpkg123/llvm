@@ -503,7 +503,7 @@ config.substitutions.append(("CHECK-%os", ("CHECK-" + config.host_os)))
 # Define %arch to check for architecture-dependent output.
 config.substitutions.append(("%arch", (config.host_arch)))
 
-if config.host_os == "Windows":
+if os.name == "nt":
     # FIXME: This isn't quite right. Specifically, it will succeed if the program
     # does not crash but exits with a non-zero exit code. We ought to merge
     # KillTheDoctor and not --crash to make the latter more useful and remove the
@@ -964,6 +964,23 @@ if config.memprof_shadow_scale:
     )
 else:
     config.available_features.add("memprof-shadow-scale-3")
+
+
+def target_page_size():
+    try:
+        proc = subprocess.Popen(
+            f"{emulator or ''} python3",
+            shell=True,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+        )
+        out, err = proc.communicate(b'import os; print(os.sysconf("SC_PAGESIZE"))')
+        return int(out)
+    except:
+        return 4096
+
+
+config.available_features.add(f"page-size-{target_page_size()}")
 
 if config.expensive_checks:
     config.available_features.add("expensive_checks")

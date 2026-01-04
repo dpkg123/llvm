@@ -1446,8 +1446,6 @@ namespace {
     unsigned NumPlacementArgs : 30;
     LLVM_PREFERRED_TYPE(AlignedAllocationMode)
     unsigned PassAlignmentToPlacementDelete : 1;
-    LLVM_PREFERRED_TYPE(TypeAwareAllocationMode)
-    unsigned PassTypeToPlacementDelete : 1;
     const FunctionDecl *OperatorDelete;
     RValueTy TypeIdentity;
     ValueTy Ptr;
@@ -2315,7 +2313,8 @@ llvm::Value *CodeGenFunction::EmitDynamicCast(Address ThisAddr,
   bool IsExact = !IsDynamicCastToVoid &&
                  CGM.getCodeGenOpts().OptimizationLevel > 0 &&
                  DestRecordTy->getAsCXXRecordDecl()->isEffectivelyFinal() &&
-                 CGM.getCXXABI().shouldEmitExactDynamicCast(DestRecordTy);
+                 CGM.getCXXABI().shouldEmitExactDynamicCast(DestRecordTy) &&
+                 !getLangOpts().PointerAuthCalls;
 
   // C++ [expr.dynamic.cast]p4:
   //   If the value of v is a null pointer value in the pointer case, the result

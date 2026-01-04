@@ -370,11 +370,17 @@ def FeatureSVEAES : ExtensionWithMArch<"sve-aes", "SVEAES",
 def FeatureAliasSVE2AES : ExtensionWithMArch<"sve2-aes", "SVE2AES",
   "", "Shorthand for +sve2+sve-aes", [FeatureSVE2, FeatureSVEAES]>;
 
-def FeatureSVE2SM4 : ExtensionWithMArch<"sve2-sm4", "SVE2SM4", "FEAT_SVE_SM4",
-  "Enable SM4 SVE2 instructions", [FeatureSVE2, FeatureSM4]>;
+def FeatureSVESM4 : ExtensionWithMArch<"sve-sm4", "SVESM4", "FEAT_SVE_SM4",
+  "Enable SVE SM4 instructions", [FeatureSM4]>;
 
-def FeatureSVE2SHA3 : ExtensionWithMArch<"sve2-sha3", "SVE2SHA3", "FEAT_SVE_SHA3",
-  "Enable SHA3 SVE2 instructions", [FeatureSVE2, FeatureSHA3]>;
+def FeatureAliasSVE2SM4 : ExtensionWithMArch<"sve2-sm4", "SVE2SM4",
+  "", "Shorthand for +sve2+sve-sm4", [FeatureSVE2, FeatureSVESM4]>;
+
+def FeatureSVESHA3 : ExtensionWithMArch<"sve-sha3", "SVESHA3", "FEAT_SVE_SHA3",
+  "Enable SVE SHA3 instructions", [FeatureSHA3]>;
+
+def FeatureAliasSVE2SHA3 : ExtensionWithMArch<"sve2-sha3", "SVE2SHA3",
+  "", "Shorthand for +sve2+sve-sha3", [FeatureSVE2, FeatureSVESHA3]>;
 
 def FeatureSVEBitPerm : ExtensionWithMArch<"sve-bitperm", "SVEBitPerm",
   "FEAT_SVE_BitPerm",  "Enable bit permutation SVE2 instructions">;
@@ -609,8 +615,17 @@ def FeatureExperimentalZeroingPseudos
 def FeatureNoSVEFPLD1R : SubtargetFeature<"no-sve-fp-ld1r",
   "NoSVEFPLD1R", "true", "Avoid using LD1RX instructions for FP">;
 
-def FeatureZCRegMove : SubtargetFeature<"zcm", "HasZeroCycleRegMove", "true",
-                                        "Has zero-cycle register moves">;
+def FeatureZCRegMoveGPR64 : SubtargetFeature<"zcm-gpr64", "HasZeroCycleRegMoveGPR64", "true",
+                                        "Has zero-cycle register moves for GPR64 registers">;
+
+def FeatureZCRegMoveGPR32 : SubtargetFeature<"zcm-gpr32", "HasZeroCycleRegMoveGPR32", "true",
+                                        "Has zero-cycle register moves for GPR32 registers">;
+
+def FeatureZCRegMoveFPR64 : SubtargetFeature<"zcm-fpr64", "HasZeroCycleRegMoveFPR64", "true",
+                                        "Has zero-cycle register moves for FPR64 registers">;
+
+def FeatureZCRegMoveFPR32 : SubtargetFeature<"zcm-fpr32", "HasZeroCycleRegMoveFPR32", "true",
+                                        "Has zero-cycle register moves for FPR32 registers">;
 
 def FeatureZCZeroingGP : SubtargetFeature<"zcz-gp", "HasZeroCycleZeroingGP", "true",
                                         "Has zero-cycle zeroing instructions for generic registers">;
@@ -908,8 +923,8 @@ def HasV9_5aOps : Architecture64<9, 5, "a", "v9.5a",
   [HasV9_4aOps, FeatureCPA],
   !listconcat(HasV9_4aOps.DefaultExts, [FeatureCPA,  FeatureLUT, FeatureFAMINMAX])>;
 def HasV9_6aOps : Architecture64<9, 6, "a", "v9.6a",
-  [HasV9_5aOps, FeatureCMPBR, FeatureFPRCVT, FeatureSVE2p2, FeatureLSUI, FeatureOCCMO],
-  !listconcat(HasV9_5aOps.DefaultExts, [FeatureCMPBR, FeatureFPRCVT, FeatureSVE2p2,
+  [HasV9_5aOps, FeatureCMPBR, FeatureLSUI, FeatureOCCMO],
+  !listconcat(HasV9_5aOps.DefaultExts, [FeatureCMPBR,
     FeatureLSUI, FeatureOCCMO])>;
 def HasV8_0rOps : Architecture64<8, 0, "r", "v8r",
   [ //v8.1

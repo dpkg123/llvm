@@ -182,8 +182,7 @@ SCEVExpander::GetOptimalInsertionPointForCastOf(Value *V) const {
     BasicBlock::iterator IP = A->getParent()->getEntryBlock().begin();
     while ((isa<BitCastInst>(IP) &&
             isa<Argument>(cast<BitCastInst>(IP)->getOperand(0)) &&
-            cast<BitCastInst>(IP)->getOperand(0) != A) ||
-           isa<DbgInfoIntrinsic>(IP))
+            cast<BitCastInst>(IP)->getOperand(0) != A))
       ++IP;
     return IP;
   }
@@ -278,11 +277,6 @@ Value *SCEVExpander::InsertBinop(Instruction::BinaryOps Opcode,
   if (IP != BlockBegin) {
     --IP;
     for (; ScanLimit; --IP, --ScanLimit) {
-      // Don't count dbg.value against the ScanLimit, to avoid perturbing the
-      // generated code.
-      if (isa<DbgInfoIntrinsic>(IP))
-        ScanLimit++;
-
       auto canGenerateIncompatiblePoison = [&Flags](Instruction *I) {
         // Ensure that no-wrap flags match.
         if (isa<OverflowingBinaryOperator>(I)) {
@@ -382,10 +376,6 @@ Value *SCEVExpander::expandAddToGEP(const SCEV *Offset, Value *V,
   if (IP != BlockBegin) {
     --IP;
     for (; ScanLimit; --IP, --ScanLimit) {
-      // Don't count dbg.value against the ScanLimit, to avoid perturbing the
-      // generated code.
-      if (isa<DbgInfoIntrinsic>(IP))
-        ScanLimit++;
       if (auto *GEP = dyn_cast<GetElementPtrInst>(IP)) {
         if (GEP->getPointerOperand() == V &&
             GEP->getSourceElementType() == Builder.getInt8Ty() &&
@@ -1440,7 +1430,7 @@ Value *SCEVExpander::visitSequentialUMinExpr(const SCEVSequentialUMinExpr *S) {
 }
 
 Value *SCEVExpander::visitVScale(const SCEVVScale *S) {
-  return Builder.CreateVScale(ConstantInt::get(S->getType(), 1));
+  return Builder.CreateVScale(S->getType());
 }
 
 Value *SCEVExpander::expandCodeFor(const SCEV *SH, Type *Ty,
@@ -1545,8 +1535,7 @@ Value *SCEVExpander::expand(const SCEV *S) {
           InsertPt = L->getHeader()->getFirstInsertionPt();
 
         while (InsertPt != Builder.GetInsertPoint() &&
-               (isInsertedInstruction(&*InsertPt) ||
-                isa<DbgInfoIntrinsic>(&*InsertPt))) {
+               (isInsertedInstruction(&*InsertPt))) {
           InsertPt = std::next(InsertPt);
         }
         break;
@@ -2144,8 +2133,15 @@ Value *SCEVExpander::generateOverflowCheck(const SCEVAddRecExpr *AR,
   // negative. If Step is known to be positive or negative, only create
   // either 1. or 2.
   auto ComputeEndCheck = [&]() -> Value * {
-    // Checking <u 0 is always false.
-    if (!Signed && Start->isZero() && SE.isKnownPositive(Step))
+    // Checking <u 0 is always false, if (Step * trunc ExitCount) does not wrap.
+    // TODO: Predicates that can be proven true/false should be discarded when
+    // the predicates are created, not late during expansion.
+    if (!Signed && Start->isZero() && SE.isKnownPositive(Step) &&
+        DstBits < SrcBits &&
+        ExitCount == SE.getZeroExtendExpr(SE.getTruncateExpr(ExitCount, ARTy),
+                                          ExitCount->getType()) &&
+        SE.willNotOverflow(Instruction::Mul, Signed, Step,
+                           SE.getTruncateExpr(ExitCount, ARTy)))
       return ConstantInt::getFalse(Loc->getContext());
 
     // Get the backedge taken count and truncate or extended to the AR type.

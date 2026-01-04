@@ -11,13 +11,13 @@
 #include "ToolChains/Arch/ARM.h"
 #include "ToolChains/Arch/RISCV.h"
 #include "ToolChains/Clang.h"
-#include "ToolChains/CommonArgs.h"
 #include "ToolChains/Flang.h"
 #include "ToolChains/InterfaceStubs.h"
 #include "clang/Basic/ObjCRuntime.h"
 #include "clang/Basic/Sanitizers.h"
 #include "clang/Config/config.h"
 #include "clang/Driver/Action.h"
+#include "clang/Driver/CommonArgs.h"
 #include "clang/Driver/Driver.h"
 #include "clang/Driver/InputInfo.h"
 #include "clang/Driver/Job.h"
@@ -837,17 +837,30 @@ void ToolChain::addFortranRuntimeLibs(const ArgList &Args,
 
 void ToolChain::addFortranRuntimeLibraryPath(const llvm::opt::ArgList &Args,
                                              ArgStringList &CmdArgs) const {
-  // Default to the <driver-path>/../lib directory. This works fine on the
-  // platforms that we have tested so far. We will probably have to re-fine
-  // this in the future. In particular, on some platforms, we may need to use
-  // lib64 instead of lib.
+  auto AddLibSearchPathIfExists = [&](const Twine &Path) {
+    // Linker may emit warnings about non-existing directories
+    if (!llvm::sys::fs::is_directory(Path))
+      return;
+
+    if (getTriple().isKnownWindowsMSVCEnvironment())
+      CmdArgs.push_back(Args.MakeArgString("-libpath:" + Path));
+    else
+      CmdArgs.push_back(Args.MakeArgString("-L" + Path));
+  };
+
+  // Search for flang_rt.* at the same location as clang_rt.* with
+  // LLVM_ENABLE_PER_TARGET_RUNTIME_DIR=0. On most platforms, flang_rt is
+  // located at the path returned by getRuntimePath() which is already added to
+  // the library search path. This exception is for Apple-Darwin.
+  AddLibSearchPathIfExists(getCompilerRTPath());
+
+  // Fall back to the non-resource directory <driver-path>/../lib. We will
+  // probably have to refine this in the future. In particular, on some
+  // platforms, we may need to use lib64 instead of lib.
   SmallString<256> DefaultLibPath =
       llvm::sys::path::parent_path(getDriver().Dir);
   llvm::sys::path::append(DefaultLibPath, "lib");
-  if (getTriple().isKnownWindowsMSVCEnvironment())
-    CmdArgs.push_back(Args.MakeArgString("-libpath:" + DefaultLibPath));
-  else
-    CmdArgs.push_back(Args.MakeArgString("-L" + DefaultLibPath));
+  AddLibSearchPathIfExists(DefaultLibPath);
 }
 
 void ToolChain::addFlangRTLibPath(const ArgList &Args,
@@ -1731,7 +1744,7 @@ llvm::opt::DerivedArgList *ToolChain::TranslateOpenMPTargetArgs(
       continue;
     }
     if (XOpenMPTargetNoTriple && XOpenMPTargetArg &&
-        Args.getAllArgValues(options::OPT_fopenmp_targets_EQ).size() != 1) {
+        Args.getAllArgValues(options::OPT_offload_targets_EQ).size() != 1) {
       getDriver().Diag(diag::err_drv_Xopenmp_target_missing_triple);
       continue;
     }

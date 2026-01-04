@@ -535,12 +535,7 @@ Sema::ActOnCaseExpr(SourceLocation CaseLoc, ExprResult Val) {
     return ER;
   };
 
-  ExprResult Converted = CorrectDelayedTyposInExpr(
-      Val, /*InitDecl=*/nullptr, /*RecoverUncorrectedTypos=*/false,
-      CheckAndFinish);
-  if (Converted.get() == Val.get())
-    Converted = CheckAndFinish(Val.get());
-  return Converted;
+  return CheckAndFinish(Val.get());
 }
 
 StmtResult
@@ -2292,7 +2287,11 @@ StmtResult Sema::ActOnForStmt(SourceLocation ForLoc, SourceLocation LParenLoc,
           // we can diagnose if we don't see any variable declarations. This
           // covers a case like declaring a typedef, function, or structure
           // type rather than a variable.
-          NonVarSeen = DI;
+          //
+          // Note, _Static_assert is acceptable because it does not declare an
+          // identifier at all, so "for object having" does not apply.
+          if (!isa<StaticAssertDecl>(DI))
+            NonVarSeen = DI;
         }
       }
       // Diagnose if we saw a non-variable declaration but no variable
@@ -2344,7 +2343,7 @@ StmtResult Sema::ActOnForEachLValueExpr(Expr *E) {
 static bool FinishForRangeVarDecl(Sema &SemaRef, VarDecl *Decl, Expr *Init,
                                   SourceLocation Loc, int DiagID) {
   if (Decl->getType()->isUndeducedType()) {
-    ExprResult Res = SemaRef.CorrectDelayedTyposInExpr(Init);
+    ExprResult Res = Init;
     if (!Res.isUsable()) {
       Decl->setInvalidDecl();
       return true;
@@ -2428,6 +2427,7 @@ VarDecl *BuildForRangeVarDecl(Sema &SemaRef, SourceLocation Loc,
   VarDecl *Decl = VarDecl::Create(SemaRef.Context, DC, Loc, Loc, II, Type,
                                   TInfo, SC_None);
   Decl->setImplicit();
+  Decl->setCXXForRangeImplicitVar(true);
   return Decl;
 }
 
@@ -3845,10 +3845,7 @@ bool Sema::DeduceFunctionTypeFromReturnExpr(FunctionDecl *FD,
 StmtResult
 Sema::ActOnReturnStmt(SourceLocation ReturnLoc, Expr *RetValExp,
                       Scope *CurScope) {
-  // Correct typos, in case the containing function returns 'auto' and
-  // RetValExp should determine the deduced type.
-  ExprResult RetVal = CorrectDelayedTyposInExpr(
-      RetValExp, nullptr, /*RecoverUncorrectedTypos=*/true);
+  ExprResult RetVal = RetValExp;
   if (RetVal.isInvalid())
     return StmtError();
 

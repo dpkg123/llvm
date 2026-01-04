@@ -215,6 +215,8 @@ TEST_F(QualifierFixerTest, RightQualifier) {
                Style);
   verifyFormat("void foo() const override;", Style);
   verifyFormat("void foo() const override LLVM_READONLY;", Style);
+  verifyFormat("MOCK_METHOD(ReturnType, myMethod, (int), (const override));",
+               Style);
   verifyFormat("void foo() const final;", Style);
   verifyFormat("void foo() const final LLVM_READONLY;", Style);
   verifyFormat("void foo() const LLVM_READONLY;", Style);
@@ -1122,14 +1124,17 @@ TEST_F(QualifierFixerTest, IsQualifierType) {
 }
 
 TEST_F(QualifierFixerTest, IsMacro) {
-
   auto Tokens = annotate("INT INTPR Foo int");
   ASSERT_EQ(Tokens.size(), 5u) << Tokens;
-
   EXPECT_TRUE(isPossibleMacro(Tokens[0]));
   EXPECT_TRUE(isPossibleMacro(Tokens[1]));
   EXPECT_FALSE(isPossibleMacro(Tokens[2]));
   EXPECT_FALSE(isPossibleMacro(Tokens[3]));
+
+  Tokens = annotate("FOO::BAR");
+  ASSERT_EQ(Tokens.size(), 4u) << Tokens;
+  EXPECT_FALSE(isPossibleMacro(Tokens[0]));
+  EXPECT_FALSE(isPossibleMacro(Tokens[2]));
 }
 
 TEST_F(QualifierFixerTest, OverlappingQualifier) {

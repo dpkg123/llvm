@@ -871,12 +871,11 @@ bool ConstStructBuilder::Build(const APValue &Val, const RecordDecl *RD,
     }
     llvm::stable_sort(Bases);
 
-    for (unsigned I = 0, N = Bases.size(); I != N; ++I) {
-      BaseInfo &Base = Bases[I];
-
+    for (const BaseInfo &Base : Bases) {
       bool IsPrimaryBase = Layout.getPrimaryBase() == Base.Decl;
-      Build(Val.getStructBase(Base.Index), Base.Decl, IsPrimaryBase,
-            VTableClass, Offset + Base.Offset);
+      if (!Build(Val.getStructBase(Base.Index), Base.Decl, IsPrimaryBase,
+                 VTableClass, Offset + Base.Offset))
+        return false;
     }
   }
 
@@ -1622,7 +1621,7 @@ llvm::Constant *ConstantEmitter::tryEmitConstantExpr(const ConstantExpr *CE) {
   if (CE->isGLValue())
     RetType = CGM.getContext().getLValueReferenceType(RetType);
 
-  return emitAbstract(CE->getBeginLoc(), CE->getAPValueResult(), RetType);
+  return tryEmitAbstract(CE->getAPValueResult(), RetType);
 }
 
 llvm::Constant *
@@ -2236,8 +2235,12 @@ ConstantLValueEmitter::tryEmitBase(const APValue::LValueBase &base) {
       return ConstantLValue(C);
     };
 
-    if (const auto *FD = dyn_cast<FunctionDecl>(D))
-      return PtrAuthSign(CGM.getRawFunctionPointer(FD));
+    if (const auto *FD = dyn_cast<FunctionDecl>(D)) {
+      llvm::Constant *C = CGM.getRawFunctionPointer(FD);
+      if (FD->getType()->isCFIUncheckedCalleeFunctionType())
+        C = llvm::NoCFIValue::get(cast<llvm::GlobalValue>(C));
+      return PtrAuthSign(C);
+    }
 
     if (const auto *VD = dyn_cast<VarDecl>(D)) {
       // We can never refer to a variable with local storage.
