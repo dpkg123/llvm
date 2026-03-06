@@ -1,44 +1,24 @@
 # The LLVM Compiler Infrastructure
 
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/llvm/llvm-project/badge)](https://securityscorecards.dev/viewer/?uri=github.com/llvm/llvm-project)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8273/badge)](https://www.bestpractices.dev/projects/8273)
-[![libc++](https://github.com/llvm/llvm-project/actions/workflows/libcxx-build-and-test.yaml/badge.svg?branch=main&event=schedule)](https://github.com/llvm/llvm-project/actions/workflows/libcxx-build-and-test.yaml?query=event%3Aschedule)
+## Introduction
 
-Welcome to the LLVM project!
+Obfuscator-LLVM is an open-source extension project based on the LLVM compiler framework, mainly used for program code obfuscation and protection.
 
-This repository contains the source code for LLVM, a toolkit for the
-construction of highly optimized compilers, optimizers, and run-time
-environments.
+OLLVM is based on LLVM's Pass plugin mechanism, adding code obfuscation functions during the optimization stage, thereby increasing the difficulty of reversing binary programs.
 
-The LLVM project has multiple components. The core of the project is
-itself called "LLVM". This contains all of the tools, libraries, and header
-files needed to process intermediate representations and convert them into
-object files. Tools include an assembler, disassembler, bitcode analyzer, and
-bitcode optimizer.
+One of the goals of this repository is to provide relatively good code obfuscation support while building a toolchain that is infinitely close to the [AOSP prebuilt C/C++ toolchain](https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86).
 
-C-like languages use the [Clang](https://clang.llvm.org/) frontend. This
-component compiles C, C++, Objective-C, and Objective-C++ code into LLVM bitcode
--- and from there into object files, using LLVM.
+## Source
+- [AOSP llvm-project](https://android.googlesource.com/toolchain/llvm-project/)
+- [upstream llvm-project](https://github.com/llvm/llvm-project)
+- [AOSP llvm_android](https://android.googlesource.com/toolchain/llvm_android)
+- [ARKARI](https://github.com/KomiMoe/Arkari) on clang21+ or [ollvm-adaplite-clang](https://github.com/ollvm-adaplite/ollvm-clang) on clang 21 for obfuscation support
 
-Other components include:
-the [libc++ C++ standard library](https://libcxx.llvm.org),
-the [LLD linker](https://lld.llvm.org), and more.
+  ## Rust support
+  WIP
 
-## Getting the Source Code and Building LLVM
+  ## Branch for building
+  use ollvm* branch to build
 
-Consult the
-[Getting Started with LLVM](https://llvm.org/docs/GettingStarted.html#getting-the-source-code-and-building-llvm)
-page for information on building and running LLVM.
-
-For information on how to contribute to the LLVM project, please take a look at
-the [Contributing to LLVM](https://llvm.org/docs/Contributing.html) guide.
-
-## Getting in touch
-
-Join the [LLVM Discourse forums](https://discourse.llvm.org/), [Discord
-chat](https://discord.gg/xS7Z362),
-[LLVM Office Hours](https://llvm.org/docs/GettingInvolved.html#office-hours) or
-[Regular sync-ups](https://llvm.org/docs/GettingInvolved.html#online-sync-ups).
-
-The LLVM project has adopted a [code of conduct](https://llvm.org/docs/CodeOfConduct.html) for
-participants to all modes of communication within the project.
+  ## License
+  follow upstream
