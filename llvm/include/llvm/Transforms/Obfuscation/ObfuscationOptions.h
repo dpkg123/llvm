@@ -84,8 +84,8 @@ protected:
   SmallString<32> RandomSeed;
 
 public:
-  SmallVector<std::shared_ptr<ObfOpt>> getAllOpt() const {
-    SmallVector<std::shared_ptr<ObfOpt>, 7> allOpt;
+  SmallVector<std::shared_ptr<ObfOpt>, 8> getAllOpt() const {
+    SmallVector<std::shared_ptr<ObfOpt>, 8> allOpt;
     allOpt.push_back(IndBrOpt);
     allOpt.push_back(ICallOpt);
     allOpt.push_back(IndGvOpt);
