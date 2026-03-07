@@ -15,8 +15,8 @@ One of the goals of this repository is to provide relatively good code obfuscati
 - [ARKARI](https://github.com/KomiMoe/Arkari) on clang21+ or [ollvm-adaplite-clang](https://github.com/ollvm-adaplite/ollvm-clang) on clang 21 for obfuscation support
 
 ## Status
-- [x] Build with GCC(some project not testedvyet)
-- [x] Build self
+- [x] Build with GCC(some project not tested yet such as libc)
+- [x] Build self(with same)
 - [ ] Build Rust(some thing is wrong)
 - [x] Build simpile program and run normally
 - [ ] Build kernel and run normally
