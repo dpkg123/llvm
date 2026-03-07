@@ -14,15 +14,14 @@ One of the goals of this repository is to provide relatively good code obfuscati
 - [AOSP llvm_android](https://android.googlesource.com/toolchain/llvm_android)
 - [ARKARI](https://github.com/KomiMoe/Arkari) on clang21+ or [ollvm-adaplite-clang](https://github.com/ollvm-adaplite/ollvm-clang) on clang 21 for obfuscation support
 
-## Rust support
-Not tested yet
-
 ## Status
 - [x] Build with GCC(some project not testedvyet)
 - [x] Build self
-- [ ] Build with Rust(some thing is wrong)
+- [ ] Build Rust(some thing is wrong)
 - [x] Build simpile program and run normally
-- [ ] Build kernel and run normallt
+- [ ] Build kernel and run normally
+- [ ] Build Rust program with this toolchain(not tested yet)
+- [ ] Run LLVM testsuite
 
 ## Branch for building
 use ollvm* branch to build llvm
