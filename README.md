@@ -17,6 +17,13 @@ One of the goals of this repository is to provide relatively good code obfuscati
 ## Rust support
 Not tested yet
 
+## Status
+- [x] Build with GCC(some project not testedvyet)
+- [x] Build self
+- [ ] Build with Rust(some thing is wrong)
+- [x] Build simpile program and run normally
+- [ ] Build kernel and run normallt
+
 ## Branch for building
 use ollvm* branch to build llvm
 
