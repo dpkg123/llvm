@@ -17,11 +17,11 @@ One of the goals of this repository is to provide relatively good code obfuscati
 ## Status
 - [x] Build with GCC(some project not tested yet such as libc)
 - [x] Build self(with same)
-- [ ] Build Rust(some thing is wrong)
+- [x] Build Rust(stage0,stage1 and stage2 all build complete)
 - [x] Build simpile program and run normally
 - [ ] Build kernel and run normally
 - [ ] Build Rust program with this toolchain(not tested yet)
-- [ ] Run LLVM testsuite
+- [ ] Run LLVM testsuite(with same)
 
 ## Branch for building
 use ollvm* branch to build llvm
