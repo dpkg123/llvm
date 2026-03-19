@@ -97,7 +97,7 @@ function(darwin_get_toolchain_supported_archs output_var)
   else()
     # If auto-detecting fails, fall back to a default set
     message(WARNING "Detecting supported architectures from 'ld -v' failed. Returning default set.")
-    set(ARCHES "i386;x86_64;armv7;armv7s;arm64")
+    set(ARCHES "x86_64;armv7;armv7s;arm64")
   endif()
   set(${output_var} ${ARCHES} PARENT_SCOPE)
 endfunction()
