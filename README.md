@@ -19,7 +19,7 @@ One of the goals of this repository is to provide relatively good code obfuscati
 - [x] Build self(with same)
 - [x] Build Rust(see rust part)
 - [x] Build simpile program and run normally
-- [ ] Build kernel and run normally
+- [ ] Build kernel and run normally(not tested yet)
 - [x] Build Rust program with this toolchain(test some samples with Arkari)
 - [ ] Run LLVM testsuite(not tested yet)
 
