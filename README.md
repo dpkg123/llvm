@@ -1,10 +1,25 @@
 <h1 align="center">Arkari Just ARKARI</h1>
 
-<h3 align="center">
-  <a href="https://discord.gg/f5nDYjsrKZ">
-    <img src="https://img.shields.io/badge/Discord-加入群组-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="加入Discord群组" />
-  </a>
-</h3>
+<table align="center">
+  <tr>
+    <td align="center">
+      <a href="https://qm.qq.com/q/ZBra3aCswY">
+        <img src="./assets/qrcode_1775907901061.jpg" alt="Arkari 动漫角色交流群二维码" width="160" />
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://discord.gg/f5nDYjsrKZ">
+        <img src="https://img.shields.io/badge/Discord-加入群组-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="加入Discord群组" />
+      </a>
+      <br />
+      <a href="https://qm.qq.com/q/ZBra3aCswY">
+        <img src="https://img.shields.io/badge/QQ%E7%BE%A4-795322920-12B7F5?style=for-the-badge&logo=tencentqq&logoColor=white" alt="加入QQ群聊" />
+      </a>
+      <br />
+      <sub>QQ群：795322920</sub>
+    </td>
+  </tr>
+</table>
 
 <p align="center">
  <a href="https://github.com/KomiMoe/Arkari/issues">
@@ -25,7 +40,7 @@
   <img src="https://img.shields.io/badge/README-English-blue.svg?colorA=161b1d&colorB=20afdf&style=for-the-badge" alt="Read in English"/>
  </a>
 </p>
-<h3 align="center">Yet another llvm based obfuscator based on goron</h3>
+<h3 align="center">Yet another LLVM-based obfuscator derived from Goron</h3>
 
 ## 介绍
 当前支持特性：
@@ -167,6 +182,34 @@ cmake -G Ninja \
 ninja
 ninja install
 ```
+## 编译(Linux x86_64 Target)
+```
+mkdir build
+cd build
+cmake -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="./install" \
+    -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lld;lldb" \
+    -DLLVM_TARGETS_TO_BUILD="X86" \
+    -DLLVM_ENABLE_RUNTIMES="compiler-rt;openmp" \
+    -DCOMPILER_RT_BUILD_ORC=OFF \
+    -DLLVM_BUILD_LLVM_C_DYLIB=OFF \
+    -DLLVM_BUILD_TOOLS=ON \
+    -DLLVM_INCLUDE_TESTS=OFF \
+    -DLLVM_INCLUDE_EXAMPLES=OFF \
+    -DLLVM_INCLUDE_BENCHMARKS=OFF \
+    -DLLVM_ENABLE_ASSERTIONS=OFF \
+    -DLLVM_RELEASE_ENABLE_LTO=OFF \
+    -DLLVM_RELEASE_ENABLE_PGO=OFF \
+    -DLLVM_ENABLE_PIC=ON \
+    ../llvm
+
+ninja -j8
+ninja install
+```
+## 编译时失败怎么办
+ninja 和 makefile 可以添加 -k 参数，部分文件失败不影响整个clang的使用。
+make install的时候使用-i参数，跳过编译时部分错误的文件。
 
 ## 使用
 可通过编译选项开启相应混淆，如启用间接跳转混淆：
@@ -339,6 +382,6 @@ Thanks to [JetBrains](https://www.jetbrains.com/?from=KomiMoe) for providing fre
 本项目采用 混合协议 开源，因此使用本项目时，你需要注意以下几点：
 1. 第三方库代码或修改部分遵循其原始开源许可.
 2. 本项目获取部分项目授权而不受部分约束
-2. 项目其余逻辑代码采用[本仓库开源许可](./LICENSE).
+3. 项目其余逻辑代码采用[本仓库开源许可](./LICENSE).
 
 **本仓库仅用于提升用户对自身代码的保护能力，实现代码逻辑混淆加密的功能，禁止任何项目未经仓库主作者授权基于 komimoe/Arkari 代码开发。使用请遵守当地法律法规，由此造成的问题由使用者和提供违规使用教程者负责。**
