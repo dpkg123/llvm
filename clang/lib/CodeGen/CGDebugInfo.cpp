@@ -59,6 +59,13 @@
 using namespace clang;
 using namespace clang::CodeGen;
 
+static SourceLocation getMacroDebugLoc(const CodeGenModule &CGM,
+                                       SourceLocation Loc) {
+  if (CGM.getCodeGenOpts().DebugInfoMacroExpansionLoc)
+    return Loc;
+  return CGM.getContext().getSourceManager().getFileLoc(Loc);
+}
+
 static uint32_t getTypeAlignIfRequired(const Type *Ty, const ASTContext &Ctx) {
   auto TI = Ctx.getTypeInfo(Ty);
   if (TI.isAlignRequired())
@@ -345,7 +352,8 @@ void CGDebugInfo::setLocation(SourceLocation Loc) {
   if (Loc.isInvalid())
     return;
 
-  CurLoc = CGM.getContext().getSourceManager().getFileLoc(Loc);
+  CurLoc = CGM.getContext().getSourceManager().getExpansionLoc(
+      getMacroDebugLoc(CGM, Loc));
 
   // If we've changed files in the middle of a lexical scope go ahead
   // and create a new lexical scope with file node if it's different
@@ -417,7 +425,7 @@ PrintingPolicy CGDebugInfo::getPrintingPolicy() const {
   }
 
   PP.SuppressInlineNamespace =
-      PrintingPolicy::SuppressInlineNamespaceMode::None;
+      llvm::to_underlying(PrintingPolicy::SuppressInlineNamespaceMode::None);
   PP.PrintAsCanonical = true;
   PP.UsePreferredNames = false;
   PP.AlwaysIncludeTypeForTemplateArgument = true;
@@ -572,7 +580,7 @@ llvm::DIFile *CGDebugInfo::getOrCreateFile(SourceLocation Loc) {
     FileName = TheCU->getFile()->getFilename();
     CSInfo = TheCU->getFile()->getChecksum();
   } else {
-    PresumedLoc PLoc = SM.getPresumedLoc(SM.getFileLoc(Loc));
+    PresumedLoc PLoc = SM.getPresumedLoc(getMacroDebugLoc(CGM, Loc));
     FileName = PLoc.getFilename();
 
     if (FileName.empty()) {
@@ -600,7 +608,7 @@ llvm::DIFile *CGDebugInfo::getOrCreateFile(SourceLocation Loc) {
       CSInfo.emplace(*CSKind, Checksum);
   }
   return createFile(FileName, CSInfo,
-                    getSource(SM, SM.getFileID(SM.getFileLoc(Loc))));
+                    getSource(SM, SM.getFileID(getMacroDebugLoc(CGM, Loc))));
 }
 
 llvm::DIFile *CGDebugInfo::createFile(
@@ -655,7 +663,7 @@ unsigned CGDebugInfo::getLineNumber(SourceLocation Loc) {
   if (Loc.isInvalid())
     return 0;
   SourceManager &SM = CGM.getContext().getSourceManager();
-  return SM.getPresumedLoc(SM.getFileLoc(Loc)).getLine();
+  return SM.getPresumedLoc(getMacroDebugLoc(CGM, Loc)).getLine();
 }
 
 unsigned CGDebugInfo::getColumnNumber(SourceLocation Loc, bool Force) {
@@ -668,7 +676,7 @@ unsigned CGDebugInfo::getColumnNumber(SourceLocation Loc, bool Force) {
     return 0;
   SourceManager &SM = CGM.getContext().getSourceManager();
   PresumedLoc PLoc =
-      SM.getPresumedLoc(Loc.isValid() ? SM.getFileLoc(Loc) : CurLoc);
+      SM.getPresumedLoc(Loc.isValid() ? getMacroDebugLoc(CGM, Loc) : CurLoc);
   return PLoc.isValid() ? PLoc.getColumn() : 0;
 }
 
@@ -2363,7 +2371,13 @@ llvm::DISubprogram *CGDebugInfo::CreateCXXMemberFunction(
       // Emit MS ABI vftable information.  There is only one entry for the
       // deleting dtor.
       const auto *DD = dyn_cast<CXXDestructorDecl>(Method);
-      GlobalDecl GD = DD ? GlobalDecl(DD, Dtor_Deleting) : GlobalDecl(Method);
+      GlobalDecl GD =
+          DD ? GlobalDecl(
+                   DD, CGM.getContext().getTargetInfo().emitVectorDeletingDtors(
+                           CGM.getContext().getLangOpts())
+                           ? Dtor_VectorDeleting
+                           : Dtor_Deleting)
+             : GlobalDecl(Method);
       MethodVFTableLocation ML =
           CGM.getMicrosoftVTableContext().getMethodVFTableLocation(GD);
       VIndex = ML.Index;
@@ -4957,7 +4971,7 @@ void CGDebugInfo::EmitFunctionDecl(GlobalDecl GD, SourceLocation Loc,
 
 void CGDebugInfo::EmitFuncDeclForCallSite(llvm::CallBase *CallOrInvoke,
                                           QualType CalleeType,
-                                          const FunctionDecl *CalleeDecl) {
+                                          GlobalDecl CalleeGlobalDecl) {
   if (!CallOrInvoke)
     return;
   auto *Func = dyn_cast<llvm::Function>(CallOrInvoke->getCalledOperand());
@@ -4965,6 +4979,9 @@ void CGDebugInfo::EmitFuncDeclForCallSite(llvm::CallBase *CallOrInvoke,
     return;
   if (Func->getSubprogram())
     return;
+
+  const FunctionDecl *CalleeDecl =
+      cast<FunctionDecl>(CalleeGlobalDecl.getDecl());
 
   // Do not emit a declaration subprogram for a function with nodebug
   // attribute, or if call site info isn't required.
@@ -4976,7 +4993,8 @@ void CGDebugInfo::EmitFuncDeclForCallSite(llvm::CallBase *CallOrInvoke,
   // create the one describing the function in order to have complete
   // call site debug info.
   if (!CalleeDecl->isStatic() && !CalleeDecl->isInlined())
-    EmitFunctionDecl(CalleeDecl, CalleeDecl->getLocation(), CalleeType, Func);
+    EmitFunctionDecl(CalleeGlobalDecl, CalleeDecl->getLocation(), CalleeType,
+                     Func);
 }
 
 void CGDebugInfo::EmitInlineFunctionStart(CGBuilderTy &Builder, GlobalDecl GD) {
@@ -5004,7 +5022,9 @@ void CGDebugInfo::EmitLocation(CGBuilderTy &Builder, SourceLocation Loc) {
   // Update our current location
   setLocation(Loc);
 
-  if (CurLoc.isInvalid() || LexicalBlockStack.empty())
+  if (CurLoc.isInvalid() ||
+      (CGM.getCodeGenOpts().DebugInfoMacroExpansionLoc && CurLoc.isMacroID()) ||
+      LexicalBlockStack.empty())
     return;
 
   llvm::MDNode *Scope = LexicalBlockStack.back();
@@ -5859,15 +5879,6 @@ struct ReconstitutableType : public RecursiveASTVisitor<ReconstitutableType> {
     Reconstitutable = false;
     return false;
   }
-  bool VisitType(Type *T) {
-    // _BitInt(N) isn't reconstitutable because the bit width isn't encoded in
-    // the DWARF, only the byte width.
-    if (T->isBitIntType()) {
-      Reconstitutable = false;
-      return false;
-    }
-    return true;
-  }
   bool TraverseEnumType(EnumType *ET, bool = false) {
     // Unnamed enums can't be reconstituted due to a lack of column info we
     // produce in the DWARF, so we can't get Clang's full name back.
@@ -6281,7 +6292,7 @@ void CGDebugInfo::AddStringLiteralDebugInfo(llvm::GlobalVariable *GV,
                                             const StringLiteral *S) {
   SourceLocation Loc = S->getStrTokenLoc(0);
   SourceManager &SM = CGM.getContext().getSourceManager();
-  PresumedLoc PLoc = SM.getPresumedLoc(SM.getFileLoc(Loc));
+  PresumedLoc PLoc = SM.getPresumedLoc(getMacroDebugLoc(CGM, Loc));
   if (!PLoc.isValid())
     return;
 
@@ -6524,7 +6535,8 @@ llvm::DINode::DIFlags CGDebugInfo::getCallSiteRelatedAttrs() const {
   // when there's a possibility of debugging backtraces.
   if (CGM.getCodeGenOpts().OptimizationLevel == 0 ||
       DebugKind == llvm::codegenoptions::NoDebugInfo ||
-      DebugKind == llvm::codegenoptions::LocTrackingOnly)
+      DebugKind == llvm::codegenoptions::LocTrackingOnly ||
+      !CGM.getCodeGenOpts().DebugCallSiteInfo)
     return llvm::DINode::FlagZero;
 
   // Call site-related attributes are available in DWARF v5. Some debuggers,

@@ -395,7 +395,7 @@ int main(int argc, char **argv) {
   if (TimeTrace)
     timeTraceProfilerInitialize(TimeTraceGranularity, argv[0]);
 
-  auto TimeTraceScopeExit = make_scope_exit([]() {
+  llvm::scope_exit TimeTraceScopeExit([]() {
     if (!TimeTrace)
       return;
     if (auto E = timeTraceProfilerWrite(TimeTraceFile, OutputFilename)) {
@@ -409,6 +409,7 @@ int main(int argc, char **argv) {
   MCOptions.CompressDebugSections = CompressDebugSections.getValue();
   MCOptions.ShowMCInst = ShowInst;
   MCOptions.AsmVerbose = true;
+  MCOptions.MCNoExecStack = NoExecStack;
   MCOptions.MCUseDwarfDirectory = MCTargetOptions::EnableDwarfDirectory;
   MCOptions.InstPrinterOptions = InstPrinterOptions;
 
@@ -643,9 +644,6 @@ int main(int argc, char **argv) {
         DwoOut ? MAB->createDwoObjectWriter(*OS, DwoOut->os())
                : MAB->createObjectWriter(*OS),
         std::unique_ptr<MCCodeEmitter>(CE), *STI));
-    if (NoExecStack)
-      Str->switchSection(
-          Ctx.getAsmInfo()->getStackSection(Ctx, /*Exec=*/false));
     Str->emitVersionForTarget(TheTriple, VersionTuple(), nullptr,
                               VersionTuple());
   }

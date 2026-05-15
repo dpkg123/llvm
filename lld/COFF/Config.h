@@ -48,6 +48,7 @@ enum class ExportSource {
   Directives,
   Export,
   ModuleDefinition,
+  ExportAll,
 };
 
 enum class EmitKind { Obj, LLVM, ASM };
@@ -207,6 +208,9 @@ struct Configuration {
   // Used for /thinlto-remote-compiler-arg:<arg>
   llvm::SmallVector<llvm::StringRef, 0> dtltoCompilerArgs;
 
+  // Used for /fat-lto-objects
+  bool fatLTOObjects = false;
+
   // Used for /opt:[no]ltodebugpassmanager
   bool ltoDebugPassManager = false;
 
@@ -346,6 +350,7 @@ struct Configuration {
   bool pseudoRelocs = false;
   bool stdcallFixup = false;
   bool writeCheckSum = false;
+  bool prefetchInputs = false;
   EmitKind emit = EmitKind::Obj;
   bool allowDuplicateWeak = false;
   BuildIDHash buildIDHash = BuildIDHash::None;

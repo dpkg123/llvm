@@ -68,9 +68,9 @@ else()
     message(WARNING "The check targets will not be available!")
     set(ENABLE_CHECK_TARGETS FALSE)
   else()
-    set(OPENMP_FILECHECK_EXECUTABLE ${LLVM_RUNTIME_OUTPUT_INTDIR}/FileCheck)
+    set(OPENMP_FILECHECK_EXECUTABLE ${LLVM_TOOLS_BINARY_DIR}/FileCheck)
   endif()
-  set(OPENMP_NOT_EXECUTABLE ${LLVM_RUNTIME_OUTPUT_INTDIR}/not)
+  set(OPENMP_NOT_EXECUTABLE ${LLVM_TOOLS_BINARY_DIR}/not)
 endif()
 
 # Macro to extract information about compiler from file. (no own scope)
@@ -221,19 +221,23 @@ function(add_openmp_testsuite target comment)
       USES_TERMINAL
     )
   else()
+    set(EXTRA_CHECK_DEPENDS "")
+    if (TARGET "clang")
+      list(APPEND EXTRA_CHECK_DEPENDS clang)
+    endif()
     if (ARG_EXCLUDE_FROM_CHECK_ALL)
       add_lit_testsuite(${target}
         ${comment}
         ${ARG_UNPARSED_ARGUMENTS}
         EXCLUDE_FROM_CHECK_ALL
-        DEPENDS clang FileCheck not ${ARG_DEPENDS}
+        DEPENDS ${EXTRA_CHECK_DEPENDS} FileCheck not ${ARG_DEPENDS}
         ARGS ${ARG_ARGS}
       )
     else()
       add_lit_testsuite(${target}
         ${comment}
         ${ARG_UNPARSED_ARGUMENTS}
-        DEPENDS clang FileCheck not ${ARG_DEPENDS}
+        DEPENDS ${EXTRA_CHECK_DEPENDS} FileCheck not ${ARG_DEPENDS}
         ARGS ${ARG_ARGS}
       )
     endif()

@@ -21,6 +21,7 @@
 #include "X86Subtarget.h"
 #include "X86TargetMachine.h"
 #include "llvm/Analysis/BranchProbabilityInfo.h"
+#include "llvm/CodeGen/Analysis.h"
 #include "llvm/CodeGen/FastISel.h"
 #include "llvm/CodeGen/FunctionLoweringInfo.h"
 #include "llvm/CodeGen/MachineConstantPool.h"
@@ -1434,6 +1435,10 @@ bool X86FastISel::X86FastEmitCompare(const Value *Op0, const Value *Op1, EVT VT,
   return true;
 }
 
+#define GET_SETCC                                                              \
+  ((!Subtarget->hasZU() || Subtarget->preferLegacySetCC()) ? X86::SETCCr       \
+                                                           : X86::SETZUCCr)
+
 bool X86FastISel::X86SelectCmp(const Instruction *I) {
   const CmpInst *CI = cast<CmpInst>(I);
 
@@ -1503,10 +1508,12 @@ bool X86FastISel::X86SelectCmp(const Instruction *I) {
 
     Register FlagReg1 = createResultReg(&X86::GR8RegClass);
     Register FlagReg2 = createResultReg(&X86::GR8RegClass);
-    BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(X86::SETCCr),
-            FlagReg1).addImm(SETFOpc[0]);
-    BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(X86::SETCCr),
-            FlagReg2).addImm(SETFOpc[1]);
+    BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(GET_SETCC),
+            FlagReg1)
+        .addImm(SETFOpc[0]);
+    BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(GET_SETCC),
+            FlagReg2)
+        .addImm(SETFOpc[1]);
     BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(SETFOpc[2]),
             ResultReg).addReg(FlagReg1).addReg(FlagReg2);
     updateValueMap(I, ResultReg);
@@ -1525,8 +1532,8 @@ bool X86FastISel::X86SelectCmp(const Instruction *I) {
   if (!X86FastEmitCompare(LHS, RHS, VT, I->getDebugLoc()))
     return false;
 
-  BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(X86::SETCCr),
-          ResultReg).addImm(CC);
+  BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(GET_SETCC), ResultReg)
+      .addImm(CC);
   updateValueMap(I, ResultReg);
   return true;
 }
@@ -2083,10 +2090,12 @@ bool X86FastISel::X86FastEmitCMoveSelect(MVT RetVT, const Instruction *I) {
     if (SETFOpc) {
       Register FlagReg1 = createResultReg(&X86::GR8RegClass);
       Register FlagReg2 = createResultReg(&X86::GR8RegClass);
-      BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(X86::SETCCr),
-              FlagReg1).addImm(SETFOpc[0]);
-      BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(X86::SETCCr),
-              FlagReg2).addImm(SETFOpc[1]);
+      BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(GET_SETCC),
+              FlagReg1)
+          .addImm(SETFOpc[0]);
+      BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(GET_SETCC),
+              FlagReg2)
+          .addImm(SETFOpc[1]);
       auto const &II = TII.get(SETFOpc[2]);
       if (II.getNumDefs()) {
         Register TmpReg = createResultReg(&X86::GR8RegClass);
@@ -2989,8 +2998,9 @@ bool X86FastISel::fastLowerIntrinsicCall(const IntrinsicInst *II) {
     // Assign to a GPR since the overflow return value is lowered to a SETcc.
     Register ResultReg2 = createResultReg(&X86::GR8RegClass);
     assert((ResultReg+1) == ResultReg2 && "Nonconsecutive result registers.");
-    BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(X86::SETCCr),
-            ResultReg2).addImm(CondCode);
+    BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, MIMD, TII.get(GET_SETCC),
+            ResultReg2)
+        .addImm(CondCode);
 
     updateValueMap(II, ResultReg, 2);
     return true;
@@ -3255,6 +3265,32 @@ bool X86FastISel::fastLowerCall(CallLoweringInfo &CLI) {
 
   bool Is64Bit        = Subtarget->is64Bit();
   bool IsWin64        = Subtarget->isCallingConvWin64(CC);
+
+  // If the return type is illegal, check if the ABI requires a type conversion
+  // that FastISel cannot handle. Fall back to DAG ISel in such cases.
+  // For example, bfloat is returned as f16 in XMM0, however FastISel would
+  // assign f32 register type and store it in FuncInfo.ValueMap. This would
+  // cause DAG incorrectly perform type conversion from f32 to bfloat after get
+  // the value from FuncInfo.ValueMap.
+  // However, i1 is promoted to i8 and return i8 defined by ABI, so FastISel can
+  // lower it without switching to DAGISel.
+  SmallVector<Type *> RetTys;
+  ComputeValueTypes(DL, CLI.RetTy, RetTys);
+  for (Type *RetTy : RetTys) {
+    MVT RetVT = MVT::Other;
+    if (!isTypeLegal(RetTy, RetVT)) {
+      if (RetVT == MVT::Other)
+        return false; // Unknown type, let DAG ISel handle it.
+
+      // RetVT is not MVT::Other, it must be simple now. It is something rely on
+      // the logic of isTypeLegal().
+      MVT ABIVT = TLI.getRegisterTypeForCallingConv(CLI.RetTy->getContext(),
+                                                    CLI.CallConv, RetVT);
+      MVT RegVT = TLI.getRegisterType(CLI.RetTy->getContext(), RetVT);
+      if (ABIVT != RegVT)
+        return false;
+    }
+  }
 
   // Call / invoke instructions with NoCfCheck attribute require special
   // handling.

@@ -10,6 +10,7 @@ add_lldb_library(lldbDAP
   DAP.cpp
   DAPError.cpp
   DAPLog.cpp
+  DAPSessionManager.cpp
   EventHelper.cpp
   ExceptionBreakpoint.cpp
   FifoFiles.cpp
@@ -63,6 +64,7 @@ add_lldb_library(lldbDAP
   Handler/StepOutRequestHandler.cpp
   Handler/TestGetTargetBreakpointsRequestHandler.cpp
   Handler/ThreadsRequestHandler.cpp
+  Handler/UnknownRequestHandler.cpp
   Handler/VariablesRequestHandler.cpp
   Handler/WriteMemoryRequestHandler.cpp
 

@@ -1,4 +1,4 @@
-; RUN: opt -mtriple=wasm32 -mattr=+simd128 -passes=loop-vectorize %s | llc -mtriple=wasm32 -mattr=+simd128 -asm-verbose=false -disable-wasm-fallthrough-return-opt -wasm-keep-registers | FileCheck %s
+; RUN: opt -mtriple=wasm32 -mattr=+simd128 -passes=loop-vectorize %s | llc -mtriple=wasm32 -mattr=+simd128 -asm-verbose=false -disable-wasm-fallthrough-return-opt | FileCheck %s
 
 target datalayout = "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-n32:64-S128-ni:1:10:20"
 
@@ -20,17 +20,17 @@ target datalayout = "e-m:e-p:32:32-p10:8:8-p20:8:8-i64:64-n32:64-S128-ni:1:10:20
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
 ; CHECK: i32x4.add
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
 ; CHECK: i32x4.add
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 12, 13, 14, 15, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  8, 9, 10, 11, 24, 25, 26, 27, 12, 13, 14, 15, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 4, 5, 6, 7, 20, 21, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 16, 17, 18, 19, 4, 5, 6, 7, 20, 21, 22, 23
 ; CHECK: v128.store
 define hidden void @two_ints_same_op(ptr noalias nocapture noundef writeonly %0, ptr nocapture noundef readonly %1, ptr nocapture noundef readonly %2, i32 noundef %3) {
   %5 = icmp eq i32 %3, 0
@@ -64,17 +64,17 @@ define hidden void @two_ints_same_op(ptr noalias nocapture noundef writeonly %0,
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
 ; CHECK: i32x4.add
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
 ; CHECK: i32x4.sub
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 12, 13, 14, 15, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  8, 9, 10, 11, 24, 25, 26, 27, 12, 13, 14, 15, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 4, 5, 6, 7, 20, 21, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 16, 17, 18, 19, 4, 5, 6, 7, 20, 21, 22, 23
 ; CHECK: v128.store
 define hidden void @two_ints_vary_op(ptr noalias nocapture noundef writeonly %0, ptr nocapture noundef readonly %1, ptr nocapture noundef readonly %2, i32 noundef %3) {
   %5 = icmp eq i32 %3, 0
@@ -208,27 +208,27 @@ define hidden void @three_shorts(ptr noalias nocapture noundef writeonly %0, ptr
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i16x8.sub
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i16x8.sub
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 20, 21, 0, 1, 0, 1, 6, 7, 22, 23, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  4, 5, 20, 21, 0, 1, 0, 1, 6, 7, 22, 23, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i16x8.sub
-; CHECK: i8x16.shuffle {{.*}} 6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i16x8.sub
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 0, 1, 4, 5, 20, 21, 0, 1, 0, 1, 6, 7, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 20, 21, 22, 23, 8, 9, 10, 11, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 0, 1, 4, 5, 20, 21, 0, 1, 0, 1, 6, 7, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 20, 21, 22, 23, 8, 9, 10, 11, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 16, 17, 0, 1, 0, 1, 2, 3, 18, 19, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 0, 1, 0, 1, 16, 17, 0, 1, 0, 1, 2, 3, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 20, 21, 22, 23, 8, 9, 10, 11, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 16, 17, 0, 1, 0, 1, 2, 3, 18, 19, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 0, 1, 0, 1, 16, 17, 0, 1, 0, 1, 2, 3, 18, 19
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 20, 21, 22, 23, 8, 9, 10, 11, 28, 29, 30, 31
 ; CHECK: v128.store
 define hidden void @four_shorts_same_op(ptr noalias nocapture noundef writeonly %0, ptr nocapture noundef readonly %1, ptr nocapture noundef readonly %2, i32 noundef %3) {
   %5 = icmp eq i32 %3, 0
@@ -276,27 +276,27 @@ define hidden void @four_shorts_same_op(ptr noalias nocapture noundef writeonly 
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: v128.or
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: v128.or
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 20, 21, 0, 1, 0, 1, 6, 7, 22, 23, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  4, 5, 20, 21, 0, 1, 0, 1, 6, 7, 22, 23, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: v128.xor
-; CHECK: i8x16.shuffle {{.*}} 6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: v128.xor
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 0, 1, 4, 5, 20, 21, 0, 1, 0, 1, 6, 7, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 20, 21, 22, 23, 8, 9, 10, 11, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 0, 1, 4, 5, 20, 21, 0, 1, 0, 1, 6, 7, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 20, 21, 22, 23, 8, 9, 10, 11, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 16, 17, 0, 1, 0, 1, 2, 3, 18, 19, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 0, 1, 0, 1, 16, 17, 0, 1, 0, 1, 2, 3, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 20, 21, 22, 23, 8, 9, 10, 11, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 16, 17, 0, 1, 0, 1, 2, 3, 18, 19, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 0, 1, 0, 1, 16, 17, 0, 1, 0, 1, 2, 3, 18, 19
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 20, 21, 22, 23, 8, 9, 10, 11, 28, 29, 30, 31
 ; CHECK: v128.store
 define hidden void @four_shorts_split_op(ptr noalias nocapture noundef writeonly %0, ptr nocapture noundef readonly %1, ptr nocapture noundef readonly %2, i32 noundef %3) {
   %5 = icmp eq i32 %3, 0
@@ -343,27 +343,27 @@ define hidden void @four_shorts_split_op(ptr noalias nocapture noundef writeonly
 ; CHECK-LABEL: four_shorts_interleave_op:
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: v128.or
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: v128.xor
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 20, 21, 0, 1, 0, 1, 6, 7, 22, 23, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  4, 5, 20, 21, 0, 1, 0, 1, 6, 7, 22, 23, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: v128.or
-; CHECK: i8x16.shuffle {{.*}} 6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: v128.xor
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 0, 1, 4, 5, 20, 21, 0, 1, 0, 1, 6, 7, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 20, 21, 22, 23, 8, 9, 10, 11, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 0, 1, 4, 5, 20, 21, 0, 1, 0, 1, 6, 7, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 20, 21, 22, 23, 8, 9, 10, 11, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 16, 17, 0, 1, 0, 1, 2, 3, 18, 19, 0, 1, 0, 1
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 0, 1, 0, 1, 16, 17, 0, 1, 0, 1, 2, 3, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 20, 21, 22, 23, 8, 9, 10, 11, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 16, 17, 0, 1, 0, 1, 2, 3, 18, 19, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 0, 1, 0, 1, 16, 17, 0, 1, 0, 1, 2, 3, 18, 19
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 20, 21, 22, 23, 8, 9, 10, 11, 28, 29, 30, 31
 ; CHECK: v128.store
 define hidden void @four_shorts_interleave_op(ptr noalias nocapture noundef writeonly %0, ptr nocapture noundef readonly %1, ptr nocapture noundef readonly %2, i32 noundef %3) {
   %5 = icmp eq i32 %3, 0
@@ -483,19 +483,19 @@ define hidden void @five_shorts(ptr noalias nocapture noundef writeonly %0, ptr 
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
+; CHECK: i8x16.shuffle  0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
+; CHECK: i8x16.shuffle  0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
 ; CHECK: i16x8.extmul_high_i8x16_u
-; CHECK: i8x16.shuffle {{.*}} 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
-; CHECK: i8x16.shuffle {{.*}} 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
+; CHECK: i8x16.shuffle  1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
+; CHECK: i8x16.shuffle  1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
 ; CHECK: i16x8.extmul_high_i8x16_u
-; CHECK: i8x16.shuffle {{.*}} 0, 16, 2, 18, 4, 20, 6, 22, 8, 24, 10, 26, 12, 28, 14, 30
+; CHECK: i8x16.shuffle  0, 16, 2, 18, 4, 20, 6, 22, 8, 24, 10, 26, 12, 28, 14, 30
 ; CHECK: v128.store
 ; CHECK: i16x8.extmul_low_i8x16_u
 ; CHECK: i16x8.extmul_low_i8x16_u
-; CHECK: i8x16.shuffle {{.*}} 0, 16, 2, 18, 4, 20, 6, 22, 8, 24, 10, 26, 12, 28, 14, 30
+; CHECK: i8x16.shuffle  0, 16, 2, 18, 4, 20, 6, 22, 8, 24, 10, 26, 12, 28, 14, 30
 ; CHECK: v128.store
 define hidden void @two_bytes_same_op(ptr noalias nocapture noundef writeonly %0, ptr nocapture noundef readonly %1, ptr nocapture noundef readonly %2, i32 noundef %3) {
   %5 = icmp eq i32 %3, 0
@@ -529,18 +529,18 @@ define hidden void @two_bytes_same_op(ptr noalias nocapture noundef writeonly %0
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
+; CHECK: i8x16.shuffle  0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
+; CHECK: i8x16.shuffle  0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
 ; CHECK: i16x8.extmul_high_i8x16_u
-; CHECK: i8x16.shuffle {{.*}} 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
-; CHECK: i8x16.shuffle {{.*}} 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
+; CHECK: i8x16.shuffle  1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
+; CHECK: i8x16.shuffle  1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
 ; CHECK: i8x16.sub
-; CHECK: i8x16.shuffle {{.*}} 0, 24, 2, 25, 4, 26, 6, 27, 8, 28, 10, 29, 12, 30, 14, 31
+; CHECK: i8x16.shuffle  0, 24, 2, 25, 4, 26, 6, 27, 8, 28, 10, 29, 12, 30, 14, 31
 ; CHECK: v128.store
 ; CHECK: i16x8.extmul_low_i8x16_u
-; CHECK: i8x16.shuffle {{.*}} 0, 16, 2, 17, 4, 18, 6, 19, 8, 20, 10, 21, 12, 22, 14, 23
+; CHECK: i8x16.shuffle  0, 16, 2, 17, 4, 18, 6, 19, 8, 20, 10, 21, 12, 22, 14, 23
 ; CHECK: v128.store
 define hidden void @two_bytes_vary_op(ptr noalias nocapture noundef writeonly %0, ptr nocapture noundef readonly %1, ptr nocapture noundef readonly %2, i32 noundef %3) {
   %5 = icmp eq i32 %3, 0
@@ -672,27 +672,27 @@ define hidden void @three_bytes_interleave_op(ptr noalias nocapture noundef writ
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: v128.and
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: v128.and
-; CHECK: i8x16.shuffle {{.*}} 4, 20, 0, 0, 5, 21, 0, 0, 6, 22, 0, 0, 7, 23, 0, 0
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  4, 20, 0, 0, 5, 21, 0, 0, 6, 22, 0, 0, 7, 23, 0, 0
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: v128.and
-; CHECK: i8x16.shuffle {{.*}} 3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i8x16.shuffle {{.*}} 3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: v128.and
-; CHECK: i8x16.shuffle {{.*}} 0, 0, 4, 20, 0, 0, 5, 21, 0, 0, 6, 22, 0, 0, 7, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 18, 19, 4, 5, 22, 23, 8, 9, 26, 27, 12, 13, 30, 31
+; CHECK: i8x16.shuffle  0, 0, 4, 20, 0, 0, 5, 21, 0, 0, 6, 22, 0, 0, 7, 23
+; CHECK: i8x16.shuffle  0, 1, 18, 19, 4, 5, 22, 23, 8, 9, 26, 27, 12, 13, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 16, 0, 0, 1, 17, 0, 0, 2, 18, 0, 0, 3, 19, 0, 0
-; CHECK: i8x16.shuffle {{.*}} 0, 0, 0, 16, 0, 0, 1, 17, 0, 0, 2, 18, 0, 0, 3, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 18, 19, 4, 5, 22, 23, 8, 9, 26, 27, 12, 13, 30, 31
+; CHECK: i8x16.shuffle  0, 16, 0, 0, 1, 17, 0, 0, 2, 18, 0, 0, 3, 19, 0, 0
+; CHECK: i8x16.shuffle  0, 0, 0, 16, 0, 0, 1, 17, 0, 0, 2, 18, 0, 0, 3, 19
+; CHECK: i8x16.shuffle  0, 1, 18, 19, 4, 5, 22, 23, 8, 9, 26, 27, 12, 13, 30, 31
 ; CHECK: v128.store
 define hidden void @four_bytes_same_op(ptr noalias nocapture noundef writeonly %0, ptr nocapture noundef readonly %1, ptr nocapture noundef readonly %2, i32 noundef %3) {
   %5 = icmp eq i32 %3, 0
@@ -740,25 +740,25 @@ define hidden void @four_bytes_same_op(ptr noalias nocapture noundef writeonly %
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}}, 0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}}, 0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extmul_low_i8x16_u
-; CHECK: i8x16.shuffle {{.*}}, 1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i8x16.shuffle {{.*}}, 1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extmul_low_i8x16_u
-; CHECK: i8x16.shuffle {{.*}}, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
-; CHECK: i8x16.shuffle {{.*}}, 2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i8x16.shuffle {{.*}}, 2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i8x16.sub
-; CHECK: i8x16.shuffle {{.*}}, 3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i8x16.shuffle {{.*}}, 3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i8x16.sub
-; CHECK: i8x16.shuffle {{.*}}, 0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}}, 4, 12, 20, 28, 5, 13, 21, 29, 6, 14, 22, 30, 7, 15, 23, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 16, 17, 18, 19, 20, 21, 22, 23
+; CHECK: i8x16.shuffle  4, 12, 20, 28, 5, 13, 21, 29, 6, 14, 22, 30, 7, 15, 23, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}}, 0, 8, 16, 24, 1, 9, 17, 25, 2, 10, 18, 26, 3, 11, 19, 27
+; CHECK: i8x16.shuffle  0, 8, 16, 24, 1, 9, 17, 25, 2, 10, 18, 26, 3, 11, 19, 27
 ; CHECK: v128.store
 define hidden void @four_bytes_split_op(ptr noalias nocapture noundef writeonly %0, ptr nocapture noundef readonly %1, ptr nocapture noundef readonly %2, i32 noundef %3) {
   %5 = icmp eq i32 %3, 0
@@ -806,27 +806,27 @@ define hidden void @four_bytes_split_op(ptr noalias nocapture noundef writeonly 
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i8x16.add
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i8x16.sub
-; CHECK: i8x16.shuffle {{.*}} 4, 20, 0, 0, 5, 21, 0, 0, 6, 22, 0, 0, 7, 23, 0, 0
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  4, 20, 0, 0, 5, 21, 0, 0, 6, 22, 0, 0, 7, 23, 0, 0
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i8x16.add
-; CHECK: i8x16.shuffle {{.*}} 3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i8x16.shuffle {{.*}} 3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i8x16.sub
-; CHECK: i8x16.shuffle {{.*}} 0, 0, 4, 20, 0, 0, 5, 21, 0, 0, 6, 22, 0, 0, 7, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 18, 19, 4, 5, 22, 23, 8, 9, 26, 27, 12, 13, 30, 31
+; CHECK: i8x16.shuffle  0, 0, 4, 20, 0, 0, 5, 21, 0, 0, 6, 22, 0, 0, 7, 23
+; CHECK: i8x16.shuffle  0, 1, 18, 19, 4, 5, 22, 23, 8, 9, 26, 27, 12, 13, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 16, 0, 0, 1, 17, 0, 0, 2, 18, 0, 0, 3, 19, 0, 0
-; CHECK: i8x16.shuffle {{.*}} 0, 0, 0, 16, 0, 0, 1, 17, 0, 0, 2, 18, 0, 0, 3, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 18, 19, 4, 5, 22, 23, 8, 9, 26, 27, 12, 13, 30, 31
+; CHECK: i8x16.shuffle  0, 16, 0, 0, 1, 17, 0, 0, 2, 18, 0, 0, 3, 19, 0, 0
+; CHECK: i8x16.shuffle  0, 0, 0, 16, 0, 0, 1, 17, 0, 0, 2, 18, 0, 0, 3, 19
+; CHECK: i8x16.shuffle  0, 1, 18, 19, 4, 5, 22, 23, 8, 9, 26, 27, 12, 13, 30, 31
 ; CHECK: v128.store
 define hidden void @four_bytes_interleave_op(ptr noalias nocapture noundef writeonly %0, ptr nocapture noundef readonly %1, ptr nocapture noundef readonly %2, i32 noundef %3) {
   %5 = icmp eq i32 %3, 0
@@ -1272,45 +1272,45 @@ define hidden void @four_bytes_into_four_ints_same_op(ptr noalias nocapture noun
 ; CHECK-LABEL: four_bytes_into_four_ints_vary_op:
 ; CHECK: loop
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_u
 ; CHECK: i32x4.extend_low_i16x8_u
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_u
 ; CHECK: i32x4.extend_low_i16x8_u
 ; CHECK: i32x4.add
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_u
 ; CHECK: i32x4.extend_low_i16x8_u
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_u
 ; CHECK: i32x4.extend_low_i16x8_u
 ; CHECK: i32x4.sub
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_u
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_u
 ; CHECK: i32x4.extmul_low_i16x8_u
 ; CHECK: v128.and
-; CHECK: i8x16.shuffle {{.*}} 3, 7, 11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_u
 ; CHECK: i32x4.extend_low_i16x8_u
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
 define hidden void @four_bytes_into_four_ints_vary_op(ptr noalias nocapture noundef writeonly %0, ptr nocapture noundef readonly %1, ptr nocapture noundef readonly %2, i32 noundef %3) {
   %5 = icmp eq i32 %3, 0
@@ -1365,7 +1365,7 @@ define hidden void @four_bytes_into_four_ints_vary_op(ptr noalias nocapture noun
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 4, 5, 8, 9, 12, 13, 16, 17, 20, 21, 24, 25, 28, 29
+; CHECK: i8x16.shuffle  0, 1, 4, 5, 8, 9, 12, 13, 16, 17, 20, 21, 24, 25, 28, 29
 ; CHECK: v128.store
 define hidden void @scale_uv_row_down2(ptr nocapture noundef readonly %0, i32 noundef %1, ptr nocapture noundef writeonly %2, i32 noundef %3) {
   %5 = icmp sgt i32 %3, 0
@@ -1396,35 +1396,35 @@ define hidden void @scale_uv_row_down2(ptr nocapture noundef readonly %0, i32 no
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_u
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_u
 ; CHECK: i16x8.add
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_u
 ; CHECK: i16x8.add
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i16x8.extend_low_i8x16_u
-; CHECK: i16x8.add
-; CHECK: i16x8.add
-; CHECK: i16x8.shr_u
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i16x8.extend_low_i8x16_u
-; CHECK: i8x16.shuffle {{.*}} 3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i16x8.extend_low_i8x16_u
-; CHECK: i16x8.add
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i16x8.extend_low_i8x16_u
-; CHECK: i16x8.add
-; CHECK: i8x16.shuffle {{.*}} 3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_u
 ; CHECK: i16x8.add
 ; CHECK: i16x8.add
 ; CHECK: i16x8.shr_u
-; CHECK: i8x16.shuffle {{.*}} 0, 16, 2, 18, 4, 20, 6, 22, 8, 24, 10, 26, 12, 28, 14, 30
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i16x8.extend_low_i8x16_u
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i16x8.extend_low_i8x16_u
+; CHECK: i16x8.add
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i16x8.extend_low_i8x16_u
+; CHECK: i16x8.add
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i16x8.extend_low_i8x16_u
+; CHECK: i16x8.add
+; CHECK: i16x8.add
+; CHECK: i16x8.shr_u
+; CHECK: i8x16.shuffle  0, 16, 2, 18, 4, 20, 6, 22, 8, 24, 10, 26, 12, 28, 14, 30
 ; CHECK: v128.store
 define hidden void @scale_uv_row_down2_box(ptr nocapture noundef readonly %0, i32 noundef %1, ptr nocapture noundef writeonly %2, i32 noundef %3) {
   %5 = icmp sgt i32 %3, 0
@@ -1492,13 +1492,13 @@ define hidden void @scale_uv_row_down2_box(ptr nocapture noundef readonly %0, i3
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i8x16.avgr_u 
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i8x16.shuffle {{.*}} 3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i8x16.avgr_u 
-; CHECK: i8x16.shuffle {{.*}} 0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23
+; CHECK: i8x16.shuffle  0, 16, 1, 17, 2, 18, 3, 19, 4, 20, 5, 21, 6, 22, 7, 23
 ; CHECK: v128.store
 define hidden void @scale_uv_row_down2_linear(ptr nocapture noundef readonly %0, i32 noundef %1, ptr nocapture noundef writeonly %2, i32 noundef %3) {
   %5 = icmp sgt i32 %3, 0
@@ -1605,28 +1605,28 @@ for.body:                                         ; preds = %entry, %for.body
 ; CHECK-LABEL: two_bytes_two_floats_same_op:
 ; CHECK: loop
 ; CHECK: v128.load64_zero
-; CHECK: i8x16.shuffle {{.*}} 0, 2, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 2, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: v128.load64_zero
-; CHECK: i8x16.shuffle {{.*}} 0, 2, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 2, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 1, 3, 5, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 3, 5, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 1, 3, 5, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 3, 5, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s	
 ; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 12, 13, 14, 15, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  8, 9, 10, 11, 24, 25, 26, 27, 12, 13, 14, 15, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 4, 5, 6, 7, 20, 21, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 16, 17, 18, 19, 4, 5, 6, 7, 20, 21, 22, 23
 ; CHECK: v128.store
 define hidden void @two_bytes_two_floats_same_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
@@ -1663,28 +1663,28 @@ for.body:                                         ; preds = %entry, %for.body
 
 ; CHECK-LABEL: two_bytes_two_floats_vary_op:
 ; CHECK: v128.load64_zero
-; CHECK: i8x16.shuffle {{.*}} 0, 2, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 2, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: v128.load64_zero
-; CHECK: i8x16.shuffle {{.*}} 0, 2, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 2, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.add
-; CHECK: i8x16.shuffle {{.*}} 1, 3, 5, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 3, 5, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 1, 3, 5, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 3, 5, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.sub
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 12, 13, 14, 15, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  8, 9, 10, 11, 24, 25, 26, 27, 12, 13, 14, 15, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 4, 5, 6, 7, 20, 21, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 16, 17, 18, 19, 4, 5, 6, 7, 20, 21, 22, 23
 ; CHECK: v128.store
 define hidden void @two_bytes_two_floats_vary_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
@@ -1720,42 +1720,7 @@ for.body:                                         ; preds = %entry, %for.body
 }
 
 ; CHECK-LABEL: two_floats_two_bytes_same_op:
-; CHECK: loop
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
-; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.splat
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
-; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: v128.store64_lane
+; CHECK-NOT: v128.load
 define hidden void @two_floats_two_bytes_same_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
   %cmp22.not = icmp eq i32 %N, 0
@@ -1788,42 +1753,7 @@ for.body:                                         ; preds = %entry, %for.body
 }
 
 ; CHECK-LABEL: two_floats_two_bytes_vary_op:
-; CHECK: loop
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
-; CHECK: f32x4.add
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.splat
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
-; CHECK: f32x4.sub
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: v128.store64_lane
+; CHECK-NOT: v128.load
 define hidden void @two_floats_two_bytes_vary_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
   %cmp21.not = icmp eq i32 %N, 0
@@ -1858,24 +1788,24 @@ for.body:                                         ; preds = %entry, %for.body
 ; CHECK-LABEL: two_shorts_two_floats_same_op:
 ; CHECK: loop
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 12, 13, 14, 15, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  8, 9, 10, 11, 24, 25, 26, 27, 12, 13, 14, 15, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 4, 5, 6, 7, 20, 21, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 16, 17, 18, 19, 4, 5, 6, 7, 20, 21, 22, 23
 ; CHECK: v128.store
 define hidden void @two_shorts_two_floats_same_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
@@ -1913,24 +1843,24 @@ for.body:                                         ; preds = %entry, %for.body
 ; CHECK-LABEL: two_shorts_two_floats_vary_op:
 ; CHECK: loop
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 4, 5, 8, 9, 12, 13, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.add
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 6, 7, 10, 11, 14, 15, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.sub
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 12, 13, 14, 15, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  8, 9, 10, 11, 24, 25, 26, 27, 12, 13, 14, 15, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 4, 5, 6, 7, 20, 21, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 16, 17, 18, 19, 4, 5, 6, 7, 20, 21, 22, 23
 ; CHECK: v128.store
 define hidden void @two_shorts_two_floats_vary_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
@@ -1969,38 +1899,22 @@ for.body:                                         ; preds = %entry, %for.body
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
+; CHECK: i8x16.shuffle	0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
+; CHECK: i8x16.shuffle	0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
 ; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.splat
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
+; CHECK: i32x4.trunc_sat_f32x4_s
+; CHECK: v128.const	65535, 65535, 65535, 65535
+; CHECK: v128.and
+; CHECK: i16x8.narrow_i32x4_u
+; CHECK: i8x16.shuffle	4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
+; CHECK: i8x16.shuffle	4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
 ; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
+; CHECK: i32x4.trunc_sat_f32x4_s
+; CHECK: v128.and
+; CHECK: i16x8.narrow_i32x4_u
+; CHECK: i8x16.shuffle	0, 1, 16, 17, 2, 3, 18, 19, 4, 5, 20, 21, 6, 7, 22, 23
 ; CHECK: v128.store
 define hidden void @two_floats_two_shorts_same_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
@@ -2037,38 +1951,22 @@ for.body:                                         ; preds = %entry, %for.body
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27
 ; CHECK: f32x4.add
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.splat
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
+; CHECK: i32x4.trunc_sat_f32x4_s
+; CHECK: v128.const	65535, 65535, 65535, 65535
+; CHECK: v128.and
+; CHECK: i16x8.narrow_i32x4_u
+; CHECK: i8x16.shuffle	4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
+; CHECK: i8x16.shuffle	4, 5, 6, 7, 12, 13, 14, 15, 20, 21, 22, 23, 28, 29, 30, 31
 ; CHECK: f32x4.sub
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
+; CHECK: i32x4.trunc_sat_f32x4_s
+; CHECK: v128.and
+; CHECK: i16x8.narrow_i32x4_u
+; CHECK: i8x16.shuffle	0, 1, 16, 17, 2, 3, 18, 19, 4, 5, 20, 21, 6, 7, 22, 23
 ; CHECK: v128.store
 define hidden void @two_floats_two_shorts_vary_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
@@ -2195,58 +2093,58 @@ for.body:                                         ; preds = %entry, %for.body
 ; CHECK-LABEL: four_bytes_four_floats_same_op:
 ; CHECK: loop
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i16x8.extend_low_i8x16_s
-; CHECK: i32x4.extend_low_i16x8_s
-; CHECK: f32x4.convert_i32x4_s
-; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-; CHECK: i16x8.extend_low_i8x16_s
-; CHECK: i32x4.extend_low_i16x8_s
-; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 3, 7, 11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 3, 7, 11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i16x8.extend_low_i8x16_s
+; CHECK: i32x4.extend_low_i16x8_s
+; CHECK: f32x4.convert_i32x4_s
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i16x8.extend_low_i8x16_s
+; CHECK: i32x4.extend_low_i16x8_s
+; CHECK: f32x4.convert_i32x4_s
+; CHECK: f32x4.mul
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
 define hidden void @four_bytes_four_floats_same_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
@@ -2302,58 +2200,58 @@ for.body:                                         ; preds = %entry, %for.body
 ; CHECK-LABEL: four_bytes_four_floats_vary_op:
 ; CHECK: loop
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 4, 8, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  0, 4, 8, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 1, 5, 9, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  1, 5, 9, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.add
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 2, 6, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  2, 6, 10, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.div
-; CHECK: i8x16.shuffle {{.*}} 3, 7, 11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 3, 7, 11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle  3, 7, 11, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 ; CHECK: i16x8.extend_low_i8x16_s
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.sub
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
 define hidden void @four_bytes_four_floats_vary_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
@@ -2407,92 +2305,7 @@ for.body:                                         ; preds = %entry, %for.body
 }
 
 ; CHECK-LABEL: four_floats_four_bytes_same_op:
-; CHECK: loop
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.splat
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: v128.store
+; CHECK-NOT: v128.load
 define hidden void @four_floats_four_bytes_same_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
   %cmp48.not = icmp eq i32 %N, 0
@@ -2541,92 +2354,7 @@ for.body:                                         ; preds = %entry, %for.body
 }
 
 ; CHECK-LABEL: four_floats_four_bytes_vary_op:
-; CHECK: loop
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.splat
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.add
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.div
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.sub
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i8x16.replace_lane
-; CHECK: v128.store
+; CHECK-NOT: v128.load
 define hidden void @four_floats_four_bytes_vary_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
   %cmp45.not = icmp eq i32 %N, 0
@@ -2678,51 +2406,51 @@ for.body:                                         ; preds = %entry, %for.body
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
-; CHECK: i32x4.extend_low_i16x8_s
-; CHECK: f32x4.convert_i32x4_s
-; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
-; CHECK: i32x4.extend_low_i16x8_s
-; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i32x4.extend_low_i16x8_s
+; CHECK: f32x4.convert_i32x4_s
+; CHECK: i8x16.shuffle  6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i32x4.extend_low_i16x8_s
+; CHECK: f32x4.convert_i32x4_s
+; CHECK: f32x4.mul
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
 define hidden void @four_shorts_four_floats_same_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
@@ -2779,47 +2507,47 @@ for.body:                                         ; preds = %entry, %for.body
 ; CHECK: loop
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: v128.load
 ; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  0, 1, 8, 9, 16, 17, 24, 25, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.mul
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  2, 3, 10, 11, 18, 19, 26, 27, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.add
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  4, 5, 12, 13, 20, 21, 28, 29, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.div
-; CHECK: i8x16.shuffle {{.*}} 6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
-; CHECK: i8x16.shuffle {{.*}} 6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
+; CHECK: i8x16.shuffle  6, 7, 14, 15, 22, 23, 30, 31, 0, 1, 0, 1, 0, 1, 0, 1
 ; CHECK: i32x4.extend_low_i16x8_s
 ; CHECK: f32x4.convert_i32x4_s
 ; CHECK: f32x4.sub
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
+; CHECK: i8x16.shuffle  4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
+; CHECK: i8x16.shuffle  0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
 ; CHECK: v128.store
 define hidden void @four_shorts_four_floats_vary_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
@@ -2873,93 +2601,7 @@ for.body:                                         ; preds = %entry, %for.body
 }
 
 ; CHECK-LABEL: four_floats_four_shorts_same_op:
-; CHECK: loop
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.splat
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: v128.store
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.splat
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: v128.store
+; CHECK-NOT: v128.load
 define hidden void @four_floats_four_shorts_same_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
   %cmp48.not = icmp eq i32 %N, 0
@@ -3008,93 +2650,7 @@ for.body:                                         ; preds = %entry, %for.body
 }
 
 ; CHECK-LABEL: four_floats_four_shorts_vary_op:
-; CHECK: loop
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 16, 17, 18, 19, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: v128.load
-; CHECK: v128.load
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 16, 17, 18, 19
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.mul
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.splat
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 4, 5, 6, 7, 20, 21, 22, 23, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.add
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 8, 9, 10, 11, 24, 25, 26, 27, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 24, 25, 26, 27
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.div
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 12, 13, 14, 15, 28, 29, 30, 31, 0, 1, 2, 3, 0, 1, 2, 3
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 0, 1, 2, 3, 12, 13, 14, 15, 28, 29, 30, 31
-; CHECK: i8x16.shuffle {{.*}} 0, 1, 2, 3, 4, 5, 6, 7, 24, 25, 26, 27, 28, 29, 30, 31
-; CHECK: f32x4.sub
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: v128.store
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.splat
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: f32x4.extract_lane
-; CHECK: i32.trunc_sat_f32_s
-; CHECK: i16x8.replace_lane
-; CHECK: v128.store
+; CHECK-NOT: v128.load
 define hidden void @four_floats_four_shorts_vary_op(ptr noundef readonly captures(none) %a, ptr noundef readonly captures(none) %b, ptr noundef writeonly captures(none) %res, i32 noundef %N) {
 entry:
   %cmp45.not = icmp eq i32 %N, 0
@@ -3140,4 +2696,131 @@ for.body:                                         ; preds = %entry, %for.body
   %inc = add nuw i32 %i.046, 1
   %exitcond.not = icmp eq i32 %inc, %N
   br i1 %exitcond.not, label %for.cond.cleanup, label %for.body
+}
+
+; CHECK-NOT: v128.load
+define hidden void @mac_3d_i8(ptr dead_on_unwind noalias writable writeonly sret(%struct.ThreeBytes) align 1 captures(none) %0, ptr noundef readonly captures(none) %1, ptr noundef readonly captures(none) %2, i32 noundef %3) {
+  %5 = icmp eq i32 %3, 0
+  br i1 %5, label %6, label %12
+
+6:                                                ; preds = %12, %4
+  %7 = phi i8 [ 0, %4 ], [ %34, %12 ]
+  %8 = phi i8 [ 0, %4 ], [ %28, %12 ]
+  %9 = phi i8 [ 0, %4 ], [ %22, %12 ]
+  %10 = getelementptr inbounds nuw i8, ptr %0, i32 2
+  %11 = getelementptr inbounds nuw i8, ptr %0, i32 1
+  store i8 %9, ptr %0, align 1
+  store i8 %8, ptr %11, align 1
+  store i8 %7, ptr %10, align 1
+  ret void
+
+12:                                               ; preds = %4, %12
+  %13 = phi i32 [ %35, %12 ], [ 0, %4 ]
+  %14 = phi i8 [ %22, %12 ], [ 0, %4 ]
+  %15 = phi i8 [ %28, %12 ], [ 0, %4 ]
+  %16 = phi i8 [ %34, %12 ], [ 0, %4 ]
+  %17 = getelementptr inbounds nuw %struct.ThreeBytes, ptr %1, i32 %13
+  %18 = load i8, ptr %17, align 1
+  %19 = getelementptr inbounds nuw %struct.ThreeBytes, ptr %2, i32 %13
+  %20 = load i8, ptr %19, align 1
+  %21 = mul i8 %20, %18
+  %22 = add i8 %21, %14
+  %23 = getelementptr inbounds nuw i8, ptr %17, i32 1
+  %24 = load i8, ptr %23, align 1
+  %25 = getelementptr inbounds nuw i8, ptr %19, i32 1
+  %26 = load i8, ptr %25, align 1
+  %27 = mul i8 %26, %24
+  %28 = add i8 %27, %15
+  %29 = getelementptr inbounds nuw i8, ptr %17, i32 2
+  %30 = load i8, ptr %29, align 1
+  %31 = getelementptr inbounds nuw i8, ptr %19, i32 2
+  %32 = load i8, ptr %31, align 1
+  %33 = mul i8 %32, %30
+  %34 = add i8 %33, %16
+  %35 = add nuw i32 %13, 1
+  %36 = icmp eq i32 %35, %3
+  br i1 %36, label %6, label %12
+}
+
+; CHECK-LABEL: mac_4d_i8
+; CHECK: loop
+; CHECK: v128.load
+; CHECK: v128.load
+; CHECK: i8x16.shuffle	3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: v128.load
+; CHECK: v128.load
+; CHECK: i8x16.shuffle	3, 7, 11, 15, 19, 23, 27, 31, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i16x8.extmul_low_i8x16_u
+; CHECK: i8x16.shuffle	0, 2, 4, 6, 8, 10, 12, 14, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.add
+; CHECK: i8x16.shuffle	2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle	2, 6, 10, 14, 18, 22, 26, 30, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i16x8.extmul_low_i8x16_u
+; CHECK: i8x16.shuffle	0, 2, 4, 6, 8, 10, 12, 14, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.add
+; CHECK: i8x16.shuffle	1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle	1, 5, 9, 13, 17, 21, 25, 29, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i16x8.extmul_low_i8x16_u
+; CHECK: i8x16.shuffle	0, 2, 4, 6, 8, 10, 12, 14, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.add
+; CHECK: i8x16.shuffle	0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.shuffle	0, 4, 8, 12, 16, 20, 24, 28, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i16x8.extmul_low_i8x16_u
+; CHECK: i8x16.shuffle	0, 2, 4, 6, 8, 10, 12, 14, 0, 0, 0, 0, 0, 0, 0, 0
+; CHECK: i8x16.add
+define hidden void @mac_4d_i8(ptr dead_on_unwind noalias writable writeonly sret(%struct.FourBytes) align 1 captures(none) initializes((0, 4)) %0, ptr noundef readonly captures(none) %1, ptr noundef readonly captures(none) %2, i32 noundef %3) {
+  store i32 0, ptr %0, align 1
+  %5 = icmp eq i32 %3, 0
+  br i1 %5, label %11, label %6
+
+6:                                                ; preds = %4
+  %7 = getelementptr inbounds nuw i8, ptr %0, i32 1
+  %8 = getelementptr inbounds nuw i8, ptr %0, i32 2
+  %9 = getelementptr inbounds nuw i8, ptr %0, i32 3
+  br label %13
+
+10:                                               ; preds = %13
+  store i8 %30, ptr %7, align 1
+  store i8 %36, ptr %8, align 1
+  store i8 %42, ptr %9, align 1
+  br label %11
+
+11:                                               ; preds = %10, %4
+  %12 = phi i8 [ %24, %10 ], [ 0, %4 ]
+  store i8 %12, ptr %0, align 1
+  ret void
+
+13:                                               ; preds = %6, %13
+  %14 = phi i8 [ 0, %6 ], [ %42, %13 ]
+  %15 = phi i8 [ 0, %6 ], [ %36, %13 ]
+  %16 = phi i8 [ 0, %6 ], [ %30, %13 ]
+  %17 = phi i32 [ 0, %6 ], [ %43, %13 ]
+  %18 = phi i8 [ 0, %6 ], [ %24, %13 ]
+  %19 = getelementptr inbounds nuw %struct.FourBytes, ptr %1, i32 %17
+  %20 = load i8, ptr %19, align 1
+  %21 = getelementptr inbounds nuw %struct.FourBytes, ptr %2, i32 %17
+  %22 = load i8, ptr %21, align 1
+  %23 = mul i8 %22, %20
+  %24 = add i8 %23, %18
+  %25 = getelementptr inbounds nuw i8, ptr %19, i32 1
+  %26 = load i8, ptr %25, align 1
+  %27 = getelementptr inbounds nuw i8, ptr %21, i32 1
+  %28 = load i8, ptr %27, align 1
+  %29 = mul i8 %28, %26
+  %30 = add i8 %29, %16
+  %31 = getelementptr inbounds nuw i8, ptr %19, i32 2
+  %32 = load i8, ptr %31, align 1
+  %33 = getelementptr inbounds nuw i8, ptr %21, i32 2
+  %34 = load i8, ptr %33, align 1
+  %35 = mul i8 %34, %32
+  %36 = add i8 %35, %15
+  %37 = getelementptr inbounds nuw i8, ptr %19, i32 3
+  %38 = load i8, ptr %37, align 1
+  %39 = getelementptr inbounds nuw i8, ptr %21, i32 3
+  %40 = load i8, ptr %39, align 1
+  %41 = mul i8 %40, %38
+  %42 = add i8 %41, %14
+  %43 = add nuw i32 %17, 1
+  %44 = icmp eq i32 %43, %3
+  br i1 %44, label %10, label %13
 }
